@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Frankfurt Optimizer Dashboard</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260508-2" />
   </head>
   <body>
     <div class="app-shell">
@@ -31,10 +31,10 @@
                 dołem, aktywuje się sprzedaż.
               </p>
               <p>
-                Każde wejście może mieć dwie części: TP1 jako pierwszy cel oraz TP2 jako dalszy cel. Po TP1
-                robot może przesunąć SL pozycji TP2 na break even z buforem. W tym teście działa też ryzyko
-                kwotowe, więc dodatnie LotyTP1/LotyTP2 oznaczają aktywną część pozycji, a realny lot jest
-                liczony z kwoty ryzyka.
+                Gramy 50 USD ryzyka na jedno zlecenie. Gdy aktywne są TP1 i TP2, robot otwiera dwa osobne
+                zlecenia po 50 USD ryzyka każde: pierwsze ma TP1 na 100 pipsów, a drugie TP2 na 200 pipsów.
+                Jeśli break even po TP1 jest włączony, po osiągnięciu TP1 stop loss zlecenia TP2 jest
+                przesuwany na okolice wejścia.
               </p>
             </div>
             <div id="parameterGuide" class="parameter-guide"></div>
@@ -183,6 +183,6 @@
       </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=20260508-2"></script>
   </body>
 </html>

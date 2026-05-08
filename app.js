@@ -334,7 +334,7 @@ function renderParameterGuide() {
       renderParameterNote(
         shortSettingName(item.name),
         parameterDescription(item.name),
-        `optymalizowane: ${formatOptimizationRange(item)}`,
+        formatOptimizationOptions(item),
       ),
     )
     .join("");
@@ -585,15 +585,38 @@ function formatSettingValue(value) {
   return valueLabel(value);
 }
 
-function formatOptimizationRange(item) {
+function formatOptimizationOptions(item) {
   if (item.start === null || item.start === undefined) return "zakres z pliku .set";
-  if (item.name === "LotyTP2") {
-    return `${formatParameterValue(item.start, item.name)} -> ${formatParameterValue(item.stop, item.name)}`;
-  }
+  const values = optimizationValues(item);
+  const formatted = values.map((value) => {
+    if (item.name === "LotyTP2") return formatParameterValue(value, item.name);
+    return formatSettingValue(value);
+  });
+  const uniqueValues = [...new Set(formatted)];
+  const compactChoice =
+    uniqueValues.length <= 2 && (item.name === "LotyTP2" || typeof item.start === "boolean");
+  return uniqueValues.join(compactChoice ? " / " : ", ");
+}
+
+function optimizationValues(item) {
   if (typeof item.start === "boolean" || typeof item.stop === "boolean") {
-    return `${formatSettingValue(item.start)} -> ${formatSettingValue(item.stop)}`;
+    return [item.start, item.stop];
   }
-  return `${formatSettingValue(item.start)} -> ${formatSettingValue(item.stop)} / ${formatSettingValue(item.step)}`;
+
+  const start = number(item.start);
+  const stop = number(item.stop);
+  const step = Math.abs(number(item.step));
+  if (!step) return [item.start, item.stop];
+
+  const values = [];
+  const direction = start <= stop ? 1 : -1;
+  const limit = 100;
+  for (let current = start, count = 0; count < limit; current += step * direction, count += 1) {
+    const pastStop = direction > 0 ? current > stop + step / 1000 : current < stop - step / 1000;
+    if (pastStop) break;
+    values.push(Number(current.toFixed(10)));
+  }
+  return values.length ? values : [item.start, item.stop];
 }
 
 function renderHistogram() {

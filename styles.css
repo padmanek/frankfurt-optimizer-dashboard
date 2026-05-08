@@ -516,14 +516,12 @@ th,
 td {
   border-bottom: 1px solid var(--line);
   padding: 7px 5px;
-  text-align: right;
+  text-align: center;
   vertical-align: top;
   white-space: nowrap;
   line-height: 1.18;
 }
 
-th:first-child,
-td:first-child,
 td.text,
 th.text {
   text-align: left;
@@ -542,9 +540,9 @@ th {
 
 th button {
   display: inline-flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   min-width: 0;
   width: 100%;
   padding: 0;
@@ -554,10 +552,9 @@ th button {
   font: inherit;
   text-transform: inherit;
   line-height: 1.02;
-  text-align: right;
+  text-align: center;
 }
 
-th:first-child button,
 th.text button {
   align-items: flex-start;
   text-align: left;
@@ -571,8 +568,10 @@ th.text button {
 
 .sort-marker {
   color: var(--accent-strong);
-  font-size: 0.72rem;
+  font-size: 0.98rem;
+  font-weight: 950;
   line-height: 1;
+  transform: translateY(-1px);
 }
 
 tbody tr:hover {

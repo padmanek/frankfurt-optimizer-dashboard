@@ -230,7 +230,7 @@ h2 {
 
 .parameter-filter-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  grid-template-columns: repeat(8, minmax(130px, 1fr));
   gap: 10px;
   margin-top: 12px;
   border-top: 1px solid var(--line);
@@ -240,6 +240,7 @@ h2 {
 .parameter-filter {
   display: grid;
   min-width: 0;
+  position: relative;
   gap: 6px;
 }
 
@@ -270,10 +271,77 @@ label.filter-disabled span {
   color: #9aa5ad;
 }
 
-.checkbox-group {
+.multi-filter-button {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 500;
+  text-align: left;
+}
+
+.multi-filter-button::after {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #4f5e68;
+  content: "";
+}
+
+.multi-filter-button[aria-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+
+.multi-filter-button.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(31, 122, 104, 0.18);
+}
+
+.multi-filter-button:disabled {
+  cursor: not-allowed;
+  background: #eef3f4;
+  color: #9aa5ad;
+  opacity: 1;
+}
+
+.multi-filter-button:disabled::after {
+  border-top-color: #9aa5ad;
+}
+
+.multi-filter-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkbox-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 10;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.checkbox-group {
+  display: grid;
+  gap: 6px;
 }
 
 .checkbox-chip {
@@ -295,6 +363,7 @@ label.filter-disabled span {
 .checkbox-chip span {
   display: inline-flex;
   align-items: center;
+  width: 100%;
   min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 7px;

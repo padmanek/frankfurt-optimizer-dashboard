@@ -174,7 +174,17 @@ function populateStaticControls() {
       return `
         <div class="parameter-filter" data-parameter-filter-group="${escapeHtml(name)}">
           <div class="parameter-filter-head" title="${escapeHtml(tooltip)}">${escapeHtml(shortSettingName(name))}</div>
-          <div class="checkbox-group">
+          <button
+            class="multi-filter-button"
+            type="button"
+            data-filter-toggle="${escapeHtml(name)}"
+            aria-expanded="false"
+            title="${escapeHtml(tooltip)}"
+          >
+            <span class="multi-filter-value">Wszystkie</span>
+          </button>
+          <div class="checkbox-menu" hidden>
+            <div class="checkbox-group">
             ${values
               .map(
                 (value) =>
@@ -188,20 +198,39 @@ function populateStaticControls() {
                   </label>`,
               )
               .join("")}
+            </div>
           </div>
         </div>
       `;
     })
     .join("");
 
+  el.parameterFilterGrid.querySelectorAll("[data-filter-toggle]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleParameterFilterMenu(button.closest("[data-parameter-filter-group]"));
+    });
+  });
+  el.parameterFilterGrid.querySelectorAll(".checkbox-menu").forEach((menu) => {
+    menu.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
+
   el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]").forEach((input) => {
     input.addEventListener("change", () => {
       syncDependentParameterFilters();
+      updateParameterFilterLabels();
       applyFilters();
       render();
     });
   });
+  document.addEventListener("click", closeParameterFilterMenus);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeParameterFilterMenus();
+  });
   syncDependentParameterFilters();
+  updateParameterFilterLabels();
 }
 
 function uniqueParameterValues(name) {
@@ -244,6 +273,48 @@ function checkedParameterValues(name) {
     .map((input) => input.value);
 }
 
+function toggleParameterFilterMenu(group) {
+  if (!group || group.classList.contains("filter-disabled")) return;
+  const menu = group.querySelector(".checkbox-menu");
+  const button = group.querySelector("[data-filter-toggle]");
+  if (!menu || !button) return;
+  const shouldOpen = menu.hidden;
+  closeParameterFilterMenus(group);
+  menu.hidden = !shouldOpen;
+  button.setAttribute("aria-expanded", String(shouldOpen));
+}
+
+function closeParameterFilterMenus(exceptGroup = null) {
+  el.parameterFilterGrid.querySelectorAll("[data-parameter-filter-group]").forEach((group) => {
+    if (group === exceptGroup) return;
+    const menu = group.querySelector(".checkbox-menu");
+    const button = group.querySelector("[data-filter-toggle]");
+    if (menu) menu.hidden = true;
+    if (button) button.setAttribute("aria-expanded", "false");
+  });
+}
+
+function updateParameterFilterLabels() {
+  el.parameterFilterGrid.querySelectorAll("[data-parameter-filter-group]").forEach((group) => {
+    const parameter = group.dataset.parameterFilterGroup;
+    const button = group.querySelector("[data-filter-toggle]");
+    const label = group.querySelector(".multi-filter-value");
+    const selectedInputs = getParameterFilterInputs(parameter).filter((input) => input.checked);
+    if (!button || !label) return;
+
+    const selectedLabels = selectedInputs.map((input) =>
+      input.closest(".checkbox-chip").querySelector("span").textContent.trim(),
+    );
+    label.textContent =
+      selectedLabels.length === 0
+        ? "Wszystkie"
+        : selectedLabels.length <= 3
+          ? selectedLabels.join(", ")
+          : `${selectedLabels.length} wybrane`;
+    button.classList.toggle("active", selectedLabels.length > 0);
+  });
+}
+
 function syncDependentParameterFilters() {
   const breakEvenGroup = getParameterFilterGroup("UzyjBreakEvenPoTP1");
   const breakEvenInputs = getParameterFilterInputs("UzyjBreakEvenPoTP1");
@@ -251,7 +322,14 @@ function syncDependentParameterFilters() {
 
   const tp2Values = checkedParameterValues("LotyTP2");
   const tp2Inactive = tp2Values.length === 1 && tp2Values[0] === "0";
+  const breakEvenButton = breakEvenGroup.querySelector("[data-filter-toggle]");
+  const breakEvenMenu = breakEvenGroup.querySelector(".checkbox-menu");
   breakEvenGroup.classList.toggle("filter-disabled", tp2Inactive);
+  if (breakEvenButton) {
+    breakEvenButton.disabled = tp2Inactive;
+    breakEvenButton.setAttribute("aria-expanded", "false");
+  }
+  if (breakEvenMenu && tp2Inactive) breakEvenMenu.hidden = true;
   breakEvenInputs.forEach((input) => {
     input.disabled = tp2Inactive;
   });
@@ -273,6 +351,8 @@ function resetFilters() {
     input.checked = false;
   });
   syncDependentParameterFilters();
+  updateParameterFilterLabels();
+  closeParameterFilterMenus();
 }
 
 function passMatchesFilters(row) {

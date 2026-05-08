@@ -32,6 +32,10 @@ body {
   line-height: 1.45;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 button,
 input,
 select {
@@ -719,6 +723,15 @@ tbody tr:hover {
   background: #f7faf9;
 }
 
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:focus-visible {
+  outline: 3px solid rgba(31, 122, 104, 0.22);
+  outline-offset: -3px;
+}
+
 .score-cell {
   color: var(--accent-strong);
   font-weight: 850;
@@ -825,6 +838,133 @@ tbody tr:hover {
   padding: 18px;
 }
 
+.modal[hidden] {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(21, 31, 39, 0.46);
+}
+
+.detail-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1040px, 100%);
+  max-height: min(86vh, 900px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(21, 31, 39, 0.28);
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 16px;
+}
+
+.detail-head .eyebrow {
+  margin: 0 0 4px;
+}
+
+.detail-body {
+  display: grid;
+  gap: 16px;
+  overflow: auto;
+  padding: 16px;
+}
+
+.detail-section h3 {
+  margin: 0 0 10px;
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+}
+
+.detail-card-grid,
+.detail-param-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.detail-card,
+.detail-param {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfcfd;
+}
+
+.detail-card.wide {
+  grid-column: span 2;
+}
+
+.detail-card span,
+.detail-param span {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-card strong,
+.detail-param strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-card.positive strong,
+.detail-card .positive,
+.detail-card.positive {
+  color: var(--accent-strong);
+}
+
+.detail-card.negative strong,
+.detail-card.negative {
+  color: var(--red);
+}
+
+.mini-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.mini-table {
+  min-width: 720px;
+  font-size: 0.82rem;
+}
+
+.mini-table th {
+  position: static;
+}
+
 code {
   display: inline-block;
   border: 1px solid var(--line);
@@ -883,6 +1023,11 @@ code {
 
   .metric-meta {
     text-align: left;
+  }
+
+  .detail-card-grid,
+  .detail-param-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .table-wrap {

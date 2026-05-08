@@ -42,6 +42,10 @@ const el = {
   parameterSelect: document.querySelector("#parameterSelect"),
   parameterBars: document.querySelector("#parameterBars"),
   startHeatmap: document.querySelector("#startHeatmap"),
+  resultModal: document.querySelector("#resultModal"),
+  resultDetail: document.querySelector("#resultDetail"),
+  detailTitle: document.querySelector("#detailTitle"),
+  detailEyebrow: document.querySelector("#detailEyebrow"),
   loadError: document.querySelector("#loadError"),
 };
 
@@ -153,6 +157,27 @@ function setupControls() {
     renderParameterBars();
   });
 
+  [el.topCandidatesTable, el.setsTable, el.passesTable].forEach((container) => {
+    container.addEventListener("click", (event) => {
+      const row = event.target.closest("[data-detail-type]");
+      if (!row || !container.contains(row)) return;
+      openResultDetail(row.dataset.detailType, row.dataset.detailKey);
+    });
+    container.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const row = event.target.closest("[data-detail-type]");
+      if (!row || !container.contains(row)) return;
+      event.preventDefault();
+      openResultDetail(row.dataset.detailType, row.dataset.detailKey);
+    });
+  });
+
+  document.querySelectorAll("[data-close-detail]").forEach((button) => {
+    button.addEventListener("click", closeResultDetail);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeResultDetail();
+  });
 }
 
 function populateStaticControls() {
@@ -808,7 +833,7 @@ function buildSetsTable(rows, options) {
   const tableRows = rows
     .map((row) => {
       return `
-        <tr>
+        <tr class="clickable-row" tabindex="0" data-detail-type="set" data-detail-key="${escapeHtml(String(row.rank))}">
           ${columns
             .map(([key]) => {
               const isParameter = state.data.columns.parameters.includes(key);
@@ -871,7 +896,7 @@ function renderPassesTable() {
   const htmlRows = rows
     .map((row) => {
       return `
-        <tr>
+        <tr class="clickable-row" tabindex="0" data-detail-type="pass" data-detail-key="${escapeHtml(row._id)}">
           ${columns
             .map(([key]) => {
               const value = row[key];
@@ -1160,6 +1185,144 @@ function renderStartHeatmap() {
             </div>
           `;
         })
+        .join("")}
+    </div>
+  `;
+}
+
+function openResultDetail(type, key) {
+  const pass = type === "pass" ? state.data.passes.find((row) => row._id === key) : null;
+  const setItem =
+    type === "set"
+      ? state.data.parameterSets.find((item) => String(item.rank) === String(key))
+      : state.data.parameterSets.find((item) => item.paramKey === pass?._paramKey);
+
+  if (!setItem && !pass) return;
+
+  el.detailEyebrow.textContent = type === "pass" ? "Pass optymalizatora" : "Zestaw parametrów";
+  el.detailTitle.textContent = type === "pass"
+    ? `Pass ${valueLabel(pass.Pass)} · ${valueLabel(pass._month)}`
+    : `Zestaw #${formatInteger(setItem.rank)}`;
+
+  el.resultDetail.innerHTML = `
+    ${pass ? renderPassDetail(pass) : ""}
+    ${setItem ? renderSetDetail(setItem) : ""}
+  `;
+  el.resultModal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeResultDetail() {
+  if (!el.resultModal || el.resultModal.hidden) return;
+  el.resultModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function renderPassDetail(pass) {
+  const metrics = [
+    ["Profit", formatMoney(pass.Profit), metricClass(pass.Profit)],
+    ["Saldo", formatMoney(pass.Result), ""],
+    ["PF", formatNumber(pass["Profit Factor"], 3), ""],
+    ["RF", formatNumber(pass["Recovery Factor"], 3), ""],
+    ["DD%", formatNumber(pass["Equity DD %"], 2), ""],
+    ["Transakcje", formatInteger(pass.Trades), ""],
+    ["Sharpe", formatNumber(pass["Sharpe Ratio"], 3), ""],
+    ["Raport", valueLabel(pass._sourceFile), "wide"],
+  ];
+
+  return `
+    <section class="detail-section">
+      <h3>Wynik passu</h3>
+      ${renderDetailCards(metrics)}
+    </section>
+  `;
+}
+
+function renderSetDetail(setItem) {
+  const metrics = [
+    ["Score", formatNumber(setItem.robustnessScore, 1), "score-cell"],
+    ["Miesiące", `${formatInteger(setItem.profitableMonths)} / ${formatInteger(setItem.monthsTested)}`, ""],
+    ["Suma profit", formatMoney(setItem.totalProfit), metricClass(setItem.totalProfit)],
+    ["Mediana", formatMoney(setItem.medianMonthlyProfit), metricClass(setItem.medianMonthlyProfit)],
+    ["Najgorszy mies.", formatMoney(setItem.worstMonthProfit), metricClass(setItem.worstMonthProfit)],
+    ["DD max", `${formatNumber(setItem.maxEquityDdPct, 2)}%`, ""],
+    ["Śr. PF", formatNumber(setItem.avgProfitFactor, 3), ""],
+    ["Min PF", formatNumber(setItem.minProfitFactor, 3), ""],
+    ["Śr. RF", formatNumber(setItem.avgRecoveryFactor, 3), ""],
+    ["Top pass", valueLabel(setItem.topPass), ""],
+  ];
+
+  return `
+    <section class="detail-section">
+      <h3>Stabilność zestawu</h3>
+      ${renderDetailCards(metrics)}
+    </section>
+    <section class="detail-section">
+      <h3>Parametry</h3>
+      <div class="detail-param-grid">
+        ${state.data.columns.parameters
+          .map((name) => {
+            const value = formatTableParameterValue(setItem.params[name], name, setItem.params);
+            return `
+              <div class="detail-param">
+                <span>${escapeHtml(shortSettingName(name))}</span>
+                <strong>${escapeHtml(value)}</strong>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+    </section>
+    <section class="detail-section">
+      <h3>Miesiąc po miesiącu</h3>
+      <div class="mini-table-wrap">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Miesiąc</th>
+              <th>Profit</th>
+              <th>PF</th>
+              <th>RF</th>
+              <th>DD%</th>
+              <th>Trans.</th>
+              <th>Pass</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${setItem.monthly.map((item) => renderMonthlyDetailRow(item)).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function renderMonthlyDetailRow(item) {
+  return `
+    <tr>
+      <td>${escapeHtml(item.month)}</td>
+      <td class="${metricClass(item.meanProfit)}">${formatMoney(item.meanProfit)}</td>
+      <td>${formatNumber(item.avgProfitFactor, 3)}</td>
+      <td>${formatNumber(item.avgRecoveryFactor, 3)}</td>
+      <td>${formatNumber(item.maxEquityDdPct, 2)}</td>
+      <td>${formatInteger(item.avgTrades)}</td>
+      <td>${escapeHtml(valueLabel(item.topPass))}</td>
+    </tr>
+  `;
+}
+
+function renderDetailCards(items) {
+  return `
+    <div class="detail-card-grid">
+      ${items
+        .map(
+          ([label, value, className]) => `
+            <div class="detail-card ${escapeHtml(className || "")}">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `,
+        )
         .join("")}
     </div>
   `;

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Frankfurt Optimizer Dashboard</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css?v=20260508-7" />
+    <link rel="stylesheet" href="styles.css?v=20260508-10" />
   </head>
   <body>
     <div class="app-shell">
@@ -174,6 +174,20 @@
       </main>
     </div>
 
-    <script src="app.js?v=20260508-7"></script>
+    <div id="resultModal" class="modal" hidden>
+      <div class="modal-backdrop" data-close-detail></div>
+      <section class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+        <div class="detail-head">
+          <div>
+            <p id="detailEyebrow" class="eyebrow"></p>
+            <h2 id="detailTitle">Szczegóły wyniku</h2>
+          </div>
+          <button class="button secondary" type="button" data-close-detail>Zamknij</button>
+        </div>
+        <div id="resultDetail" class="detail-body"></div>
+      </section>
+    </div>
+
+    <script src="app.js?v=20260508-10"></script>
   </body>
 </html>

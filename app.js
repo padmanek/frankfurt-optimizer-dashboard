@@ -11,7 +11,6 @@ const state = {
   filteredPasses: [],
   filteredSets: [],
   activeView: "overview",
-  qualityOnly: false,
   passSort: { key: "Profit", direction: "desc" },
   setSort: { key: "robustnessScore", direction: "desc" },
 };
@@ -27,7 +26,6 @@ const el = {
   minPfFilter: document.querySelector("#minPfFilter"),
   minRfFilter: document.querySelector("#minRfFilter"),
   minTradesFilter: document.querySelector("#minTradesFilter"),
-  qualityFilterButton: document.querySelector("#qualityFilterButton"),
   resetFiltersButton: document.querySelector("#resetFiltersButton"),
   tabs: document.querySelectorAll(".tab"),
   views: document.querySelectorAll(".view"),
@@ -138,12 +136,6 @@ function setupControls() {
     el.minRfFilter,
     el.minTradesFilter,
   ].forEach((input) => input.addEventListener("input", rerender));
-
-  el.qualityFilterButton.addEventListener("click", () => {
-    state.qualityOnly = !state.qualityOnly;
-    el.qualityFilterButton.setAttribute("aria-pressed", String(state.qualityOnly));
-    rerender();
-  });
 
   el.resetFiltersButton.addEventListener("click", () => {
     resetFilters();
@@ -259,8 +251,6 @@ function resetFilters() {
     select.value = "";
   });
   syncDependentParameterFilters();
-  state.qualityOnly = false;
-  el.qualityFilterButton.setAttribute("aria-pressed", "false");
 }
 
 function passMatchesFilters(row) {
@@ -272,7 +262,6 @@ function passMatchesFilters(row) {
   const minTrades = el.minTradesFilter.value;
 
   if (month && row._month !== month) return false;
-  if (state.qualityOnly && !row._quality) return false;
   if (minProfit !== "" && number(row.Profit) < number(minProfit)) return false;
   if (maxDd !== "" && number(row["Equity DD %"]) > number(maxDd)) return false;
   if (minPf !== "" && number(row["Profit Factor"]) < number(minPf)) return false;
@@ -378,7 +367,7 @@ function renderKpis() {
     ["Profit dodatni", formatPercent(rows.length ? profitable / rows.length : 0), `${formatInteger(profitable)} passów`],
     ["Mediana profitu", formatMoney(medianProfit), "ważniejsza od piku"],
     ["Max profit", formatMoney(maxProfit), "najlepszy pojedynczy pass"],
-    ["Filtr jakości", formatInteger(quality), "PF/RF/DD/transakcje"],
+    ["Mocne passy", formatInteger(quality), "PF/RF/DD/transakcje"],
     ["Najlepszy score", formatNumber(bestScore, 1), `średni DD ${formatNumber(avgDd, 2)}%`],
   ];
 

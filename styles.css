@@ -230,11 +230,24 @@ h2 {
 
 .parameter-filter-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(130px, 1fr));
+  grid-template-columns: repeat(4, minmax(210px, 1fr));
   gap: 10px;
   margin-top: 12px;
   border-top: 1px solid var(--line);
   padding-top: 12px;
+}
+
+.parameter-filter {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.parameter-filter-head {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 label {
@@ -250,6 +263,65 @@ label span {
 }
 
 label.filter-disabled span {
+  color: #9aa5ad;
+}
+
+.parameter-filter.filter-disabled .parameter-filter-head {
+  color: #9aa5ad;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.checkbox-chip {
+  display: inline-flex;
+  min-width: 0;
+  gap: 0;
+}
+
+.checkbox-chip input {
+  position: absolute;
+  width: 1px;
+  min-height: 0;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox-chip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 9px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.checkbox-chip input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.checkbox-chip input:focus-visible + span {
+  outline: 3px solid rgba(31, 122, 104, 0.22);
+  outline-offset: 2px;
+}
+
+.checkbox-chip input:disabled + span {
+  cursor: not-allowed;
+  border-color: #dfe5e8;
+  background: #eef3f4;
   color: #9aa5ad;
 }
 

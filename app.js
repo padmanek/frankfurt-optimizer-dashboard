@@ -172,24 +172,30 @@ function populateStaticControls() {
       const values = uniqueParameterValues(name);
       const tooltip = parameterDescription(name);
       return `
-        <label>
-          <span title="${escapeHtml(tooltip)}">${escapeHtml(shortSettingName(name))}</span>
-          <select data-parameter-filter="${escapeHtml(name)}">
-            <option value="">Wszystkie</option>
+        <div class="parameter-filter" data-parameter-filter-group="${escapeHtml(name)}">
+          <div class="parameter-filter-head" title="${escapeHtml(tooltip)}">${escapeHtml(shortSettingName(name))}</div>
+          <div class="checkbox-group">
             ${values
               .map(
                 (value) =>
-                  `<option value="${escapeHtml(valueKey(value))}">${escapeHtml(formatParameterValue(value, name))}</option>`,
+                  `<label class="checkbox-chip">
+                    <input
+                      type="checkbox"
+                      data-parameter-filter="${escapeHtml(name)}"
+                      value="${escapeHtml(valueKey(value))}"
+                    />
+                    <span>${escapeHtml(formatParameterValue(value, name))}</span>
+                  </label>`,
               )
               .join("")}
-          </select>
-        </label>
+          </div>
+        </div>
       `;
     })
     .join("");
 
-  el.parameterFilterGrid.querySelectorAll("select").forEach((select) => {
-    select.addEventListener("input", () => {
+  el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]").forEach((input) => {
+    input.addEventListener("change", () => {
       syncDependentParameterFilters();
       applyFilters();
       render();
@@ -213,30 +219,46 @@ function uniqueParameterValues(name) {
 }
 
 function matchesParameterSelects(row) {
-  const selects = el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]");
-  for (const select of selects) {
-    if (select.disabled) continue;
-    if (!select.value) continue;
-    const parameter = select.dataset.parameterFilter;
-    if (valueKey(row[parameter]) !== select.value) return false;
+  const groups = el.parameterFilterGrid.querySelectorAll("[data-parameter-filter-group]");
+  for (const group of groups) {
+    if (group.classList.contains("filter-disabled")) continue;
+    const parameter = group.dataset.parameterFilterGroup;
+    const selected = checkedParameterValues(parameter);
+    if (!selected.length) continue;
+    if (!selected.includes(valueKey(row[parameter]))) return false;
   }
   return true;
 }
 
-function getParameterFilter(name) {
-  return el.parameterFilterGrid.querySelector(`[data-parameter-filter="${name}"]`);
+function getParameterFilterGroup(name) {
+  return el.parameterFilterGrid.querySelector(`[data-parameter-filter-group="${name}"]`);
+}
+
+function getParameterFilterInputs(name) {
+  return [...el.parameterFilterGrid.querySelectorAll(`[data-parameter-filter="${name}"]`)];
+}
+
+function checkedParameterValues(name) {
+  return getParameterFilterInputs(name)
+    .filter((input) => input.checked)
+    .map((input) => input.value);
 }
 
 function syncDependentParameterFilters() {
-  const tp2Select = getParameterFilter("LotyTP2");
-  const breakEvenSelect = getParameterFilter("UzyjBreakEvenPoTP1");
-  if (!tp2Select || !breakEvenSelect) return;
+  const breakEvenGroup = getParameterFilterGroup("UzyjBreakEvenPoTP1");
+  const breakEvenInputs = getParameterFilterInputs("UzyjBreakEvenPoTP1");
+  if (!breakEvenGroup || !breakEvenInputs.length) return;
 
-  const tp2Inactive = tp2Select.value === "0";
-  breakEvenSelect.disabled = tp2Inactive;
-  breakEvenSelect.closest("label").classList.toggle("filter-disabled", tp2Inactive);
+  const tp2Values = checkedParameterValues("LotyTP2");
+  const tp2Inactive = tp2Values.length === 1 && tp2Values[0] === "0";
+  breakEvenGroup.classList.toggle("filter-disabled", tp2Inactive);
+  breakEvenInputs.forEach((input) => {
+    input.disabled = tp2Inactive;
+  });
   if (tp2Inactive) {
-    breakEvenSelect.value = "";
+    breakEvenInputs.forEach((input) => {
+      input.checked = false;
+    });
   }
 }
 
@@ -247,8 +269,8 @@ function resetFilters() {
   el.minPfFilter.value = "";
   el.minRfFilter.value = "";
   el.minTradesFilter.value = "";
-  el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]").forEach((select) => {
-    select.value = "";
+  el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]").forEach((input) => {
+    input.checked = false;
   });
   syncDependentParameterFilters();
 }

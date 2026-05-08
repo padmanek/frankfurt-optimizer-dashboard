@@ -464,7 +464,7 @@ function shortSettingName(name) {
     LotyTP1: "Loty TP1",
     LotyTP2: "TP2",
     WartoscPipsa: "Wartość pipsa",
-    OdstepWejsciaPipsy: "Odstęp wejścia",
+    OdstepWejsciaPipsy: "Odstęp od zakresu w pipsach",
     StopLossPipsy: "Stop Loss",
     TakeProfit1Pipsy: "Take Profit 1",
     TakeProfit2Pipsy: "Take Profit 2",

@@ -249,6 +249,10 @@ label span {
   font-weight: 800;
 }
 
+label.filter-disabled span {
+  color: #9aa5ad;
+}
+
 input,
 select {
   width: 100%;
@@ -258,6 +262,13 @@ select {
   padding: 0 10px;
   background: #fff;
   color: var(--text);
+}
+
+select:disabled {
+  cursor: not-allowed;
+  background: #eef3f4;
+  color: #9aa5ad;
+  opacity: 1;
 }
 
 input:focus,

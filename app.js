@@ -96,7 +96,10 @@ function formatParameterValue(value, parameterName = "") {
   return valueLabel(value);
 }
 
-function formatTableParameterValue(value, parameterName = "") {
+function formatTableParameterValue(value, parameterName = "", context = null) {
+  if (parameterName === "UzyjBreakEvenPoTP1" && context && number(context.LotyTP2) <= 0) {
+    return "-";
+  }
   if (parameterName === "LotyTP2") {
     return number(value) > 0 ? "tak" : "nie";
   }
@@ -195,10 +198,12 @@ function populateStaticControls() {
 
   el.parameterFilterGrid.querySelectorAll("select").forEach((select) => {
     select.addEventListener("input", () => {
+      syncDependentParameterFilters();
       applyFilters();
       render();
     });
   });
+  syncDependentParameterFilters();
 }
 
 function uniqueParameterValues(name) {
@@ -218,11 +223,29 @@ function uniqueParameterValues(name) {
 function matchesParameterSelects(row) {
   const selects = el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]");
   for (const select of selects) {
+    if (select.disabled) continue;
     if (!select.value) continue;
     const parameter = select.dataset.parameterFilter;
     if (valueKey(row[parameter]) !== select.value) return false;
   }
   return true;
+}
+
+function getParameterFilter(name) {
+  return el.parameterFilterGrid.querySelector(`[data-parameter-filter="${name}"]`);
+}
+
+function syncDependentParameterFilters() {
+  const tp2Select = getParameterFilter("LotyTP2");
+  const breakEvenSelect = getParameterFilter("UzyjBreakEvenPoTP1");
+  if (!tp2Select || !breakEvenSelect) return;
+
+  const tp2Inactive = tp2Select.value === "0";
+  breakEvenSelect.disabled = tp2Inactive;
+  breakEvenSelect.closest("label").classList.toggle("filter-disabled", tp2Inactive);
+  if (tp2Inactive) {
+    breakEvenSelect.value = "";
+  }
 }
 
 function resetFilters() {
@@ -235,6 +258,7 @@ function resetFilters() {
   el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]").forEach((select) => {
     select.value = "";
   });
+  syncDependentParameterFilters();
   state.qualityOnly = false;
   el.qualityFilterButton.setAttribute("aria-pressed", "false");
 }
@@ -680,7 +704,7 @@ function buildSetsTable(rows, options) {
                 : key.includes("Profit") || key.includes("Monthly")
                   ? metricClass(value)
                   : "";
-              const content = formatSetCell(key, value);
+              const content = formatSetCell(key, value, row.params);
               return `<td class="${className} ${key === "robustnessScore" ? "score-cell" : ""} ${columnClass(key)}">${content}</td>`;
             })
             .join("")}
@@ -702,8 +726,10 @@ function buildSetsTable(rows, options) {
   `;
 }
 
-function formatSetCell(key, value) {
-  if (state.data.columns.parameters.includes(key)) return escapeHtml(formatTableParameterValue(value, key));
+function formatSetCell(key, value, context = null) {
+  if (state.data.columns.parameters.includes(key)) {
+    return escapeHtml(formatTableParameterValue(value, key, context));
+  }
   if (key === "rank" || key === "monthsTested" || key === "profitableMonths") return formatInteger(value);
   if (key.includes("Factor")) return formatNumber(value, 3);
   if (key.includes("Trades")) return formatInteger(value);
@@ -737,7 +763,7 @@ function renderPassesTable() {
               const value = row[key];
               const isText = key === "_month" || state.data.columns.parameters.includes(key);
               const className = key === "Profit" ? metricClass(value) : isText ? "text" : "";
-              return `<td class="${className} ${columnClass(key)}">${formatPassCell(key, value)}</td>`;
+              return `<td class="${className} ${columnClass(key)}">${formatPassCell(key, value, row)}</td>`;
             })
             .join("")}
         </tr>
@@ -756,12 +782,14 @@ function renderPassesTable() {
   `;
 }
 
-function formatPassCell(key, value) {
+function formatPassCell(key, value, context = null) {
   if (key === "_month") return escapeHtml(valueLabel(value));
   if (key === "Pass" || key === "Trades") return formatInteger(value);
   if (["Profit Factor", "Recovery Factor", "Sharpe Ratio"].includes(key)) return formatNumber(value, 3);
   if (key === "Equity DD %") return formatNumber(value, 2);
-  if (state.data.columns.parameters.includes(key)) return escapeHtml(formatTableParameterValue(value, key));
+  if (state.data.columns.parameters.includes(key)) {
+    return escapeHtml(formatTableParameterValue(value, key, context));
+  }
   return formatMoney(value);
 }
 

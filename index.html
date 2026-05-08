@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Frankfurt Optimizer Dashboard</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MetaTrader Optimizer</p>
+          <h1>Frankfurt Optimizer Dashboard</h1>
+          <p id="dataSummary" class="muted">Ładowanie danych...</p>
+        </div>
+      </header>
+
+      <main>
+        <section id="strategyPanel" class="panel strategy-panel">
+          <div class="section-heading">
+            <h2>Jak działa strategia</h2>
+            <span class="pill">Frankfurt Breakout</span>
+          </div>
+          <div class="strategy-content">
+            <div class="strategy-copy">
+              <p>
+                EA mierzy poranny zakres ceny na świecach M15, a po zakończeniu zakresu stawia zlecenia
+                oczekujące nad maksimum i pod minimum. Gdy rynek wybije górą, aktywuje się kupno; gdy wybije
+                dołem, aktywuje się sprzedaż.
+              </p>
+              <p>
+                Każde wejście może mieć dwie części: TP1 jako pierwszy cel oraz TP2 jako dalszy cel. Po TP1
+                robot może przesunąć SL pozycji TP2 na break even z buforem. W tym teście działa też ryzyko
+                kwotowe, więc dodatnie LotyTP1/LotyTP2 oznaczają aktywną część pozycji, a realny lot jest
+                liczony z kwoty ryzyka.
+              </p>
+            </div>
+            <div id="parameterGuide" class="parameter-guide"></div>
+          </div>
+        </section>
+
+        <section class="panel filter-panel" aria-label="Filtry">
+          <div class="filter-grid">
+            <label>
+              <span title="Miesiąc lub zakres dat raportu optymalizacji.">Miesiąc</span>
+              <select id="monthFilter"></select>
+            </label>
+            <label>
+              <span title="Minimalny profit passu. Wyniki poniżej tej wartości zostaną ukryte.">Min. profit</span>
+              <input id="minProfitFilter" type="number" step="50" placeholder="0" />
+            </label>
+            <label>
+              <span title="Maksymalny dopuszczalny drawdown kapitału w procentach. Niżej oznacza spokojniejszy wynik.">Max DD %</span>
+              <input id="maxDdFilter" type="number" step="0.5" placeholder="10" />
+            </label>
+            <label>
+              <span title="Minimalny Profit Factor. To stosunek zysków brutto do strat brutto; powyżej 1 oznacza przewagę zysku nad stratą.">Min. PF</span>
+              <input id="minPfFilter" type="number" step="0.1" placeholder="1.5" />
+            </label>
+            <label>
+              <span title="Minimalny Recovery Factor. Pokazuje, ile profit wynosi względem drawdownu; im wyżej, tym lepiej wynik odrabia ryzyko.">Min. RF</span>
+              <input id="minRfFilter" type="number" step="0.1" placeholder="2" />
+            </label>
+            <label>
+              <span title="Minimalna liczba transakcji w pass-ie. Pomaga odrzucić wyniki oparte na zbyt małej próbce.">Min. transakcji</span>
+              <input id="minTradesFilter" type="number" step="1" placeholder="30" />
+            </label>
+            <button
+              id="qualityFilterButton"
+              class="button ghost"
+              type="button"
+              aria-pressed="false"
+              title="Szybki filtr jakości: profit co najmniej 1500, PF co najmniej 2.5, RF co najmniej 3, DD maksymalnie 10%, minimum 30 transakcji."
+            >
+              Filtr jakości
+            </button>
+            <button
+              id="resetFiltersButton"
+              class="button secondary"
+              type="button"
+              title="Wyczyść wszystkie filtry i wróć do pełnej listy wyników."
+            >
+              Reset filtrów
+            </button>
+          </div>
+          <div id="parameterFilterGrid" class="parameter-filter-grid"></div>
+        </section>
+
+        <nav class="tabs" aria-label="Widoki">
+          <button class="tab active" data-view="overview" type="button">Przegląd</button>
+          <button class="tab" data-view="sets" type="button">Zestawy parametrów</button>
+          <button class="tab" data-view="passes" type="button">Wszystkie passy</button>
+          <button class="tab" data-view="parameters" type="button">Analiza parametrów</button>
+        </nav>
+
+        <section id="overviewView" class="view active">
+          <div id="kpiGrid" class="kpi-grid"></div>
+
+          <div class="overview-grid">
+            <section class="panel">
+              <div class="section-heading">
+                <h2>Najlepsze miesiące</h2>
+                <span id="monthCountLabel" class="pill"></span>
+              </div>
+              <div id="monthSummary" class="month-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="section-heading">
+                <h2>Rozkład profitów</h2>
+                <span id="histogramLabel" class="pill"></span>
+              </div>
+              <canvas id="profitHistogram" width="780" height="280"></canvas>
+            </section>
+          </div>
+
+          <div class="filter-mount" data-filter-mount="overview"></div>
+
+          <section class="panel">
+            <div class="section-heading">
+              <h2>Top kandydaci według stabilności</h2>
+              <span class="pill">ranking roboczy</span>
+            </div>
+            <div id="topCandidatesTable" class="table-wrap"></div>
+          </section>
+        </section>
+
+        <section id="setsView" class="view">
+          <div class="filter-mount" data-filter-mount="sets"></div>
+
+          <section class="panel">
+            <div class="section-heading">
+              <h2>Zestawy parametrów</h2>
+              <span id="setsCountLabel" class="pill"></span>
+            </div>
+            <div id="setsTable" class="table-wrap"></div>
+          </section>
+        </section>
+
+        <section id="passesView" class="view">
+          <div class="filter-mount" data-filter-mount="passes"></div>
+
+          <section class="panel">
+            <div class="section-heading">
+              <h2>Wszystkie passy</h2>
+              <span id="passesCountLabel" class="pill"></span>
+            </div>
+            <div id="passesTable" class="table-wrap"></div>
+          </section>
+        </section>
+
+        <section id="parametersView" class="view">
+          <div class="filter-mount" data-filter-mount="parameters"></div>
+
+          <div class="parameter-grid">
+            <section class="panel">
+              <div class="section-heading">
+                <h2>Wpływ parametru</h2>
+                <select id="parameterSelect"></select>
+              </div>
+              <div id="parameterBars" class="bars"></div>
+            </section>
+
+            <section class="panel">
+              <div class="section-heading">
+                <h2>Mapa godziny startu</h2>
+                <span class="pill">średni profit</span>
+              </div>
+              <div id="startHeatmap" class="heatmap"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="loadError" class="panel load-error" hidden>
+          <h2>Nie udało się załadować danych</h2>
+          <p>
+            Uruchom skrypt budujący dane, a potem otwórz stronę przez lokalny serwer.
+          </p>
+          <code>python scripts/build_data.py</code>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

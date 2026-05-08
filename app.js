@@ -70,7 +70,7 @@ function formatPercent(value, digits = 1) {
 }
 
 function formatMoney(value) {
-  return formatNumber(value, 2);
+  return formatInteger(value);
 }
 
 function valueLabel(value) {
@@ -94,6 +94,13 @@ function formatParameterValue(value, parameterName = "") {
   if (value === true) return "tak";
   if (value === false) return "nie";
   return valueLabel(value);
+}
+
+function formatTableParameterValue(value, parameterName = "") {
+  if (parameterName === "LotyTP2") {
+    return number(value) > 0 ? "tak" : "nie";
+  }
+  return formatParameterValue(value, parameterName);
 }
 
 function metricClass(value) {
@@ -455,6 +462,20 @@ function shortSettingName(name) {
   return labels[name] || name;
 }
 
+function tableSettingName(name) {
+  const labels = {
+    LotyTP2: "TP2",
+    OdstepWejsciaPipsy: "Odstęp",
+    UzyjBreakEvenPoTP1: "BE TP1",
+    GodzinaStartuZakresu: "Start h",
+    MinutaStartuZakresu: "Start min",
+    GodzinaKoncaZakresu: "Koniec h",
+    MinutaKoncaZakresu: "Koniec min",
+    UsunPrzeciwneZleceniePoAktywacji: "Usuń przeciwne",
+  };
+  return labels[name] || shortSettingName(name);
+}
+
 function parameterDescription(name) {
   const descriptions = {
     UzyjRyzykaKwotowego:
@@ -627,7 +648,7 @@ function renderSetsTable() {
 
 function buildSetsTable(rows, options) {
   const metricColumns = [
-    ["rank", "Rank"],
+    ["rank", "Lp."],
     ["robustnessScore", "Score"],
     ["monthsTested", "Mies."],
     ["profitableMonths", "Profit mies."],
@@ -637,12 +658,12 @@ function buildSetsTable(rows, options) {
     ["avgProfitFactor", "Śr. PF"],
     ["minProfitFactor", "Min PF"],
     ["avgRecoveryFactor", "Śr. RF"],
-    ["maxEquityDdPct", "Max DD %"],
-    ["avgTrades", "Śr. trans."],
+    ["maxEquityDdPct", "DD%"],
+    ["avgTrades", "Trans."],
   ];
   const parameterColumns = state.data.columns.parameters.map((column) => [
     column,
-    shortSettingName(column),
+    tableSettingName(column),
   ]);
   const columns = [...metricColumns, ...parameterColumns];
 
@@ -660,7 +681,7 @@ function buildSetsTable(rows, options) {
                   ? metricClass(value)
                   : "";
               const content = formatSetCell(key, value);
-              return `<td class="${className} ${key === "robustnessScore" ? "score-cell" : ""}">${content}</td>`;
+              return `<td class="${className} ${key === "robustnessScore" ? "score-cell" : ""} ${columnClass(key)}">${content}</td>`;
             })
             .join("")}
         </tr>
@@ -669,7 +690,8 @@ function buildSetsTable(rows, options) {
     .join("");
 
   return `
-    <table>
+    <table class="data-table">
+      ${buildColGroup(columns, "set")}
       <thead>
         <tr>
           ${columns.map(([key, label]) => sortableHeader(label, key, "set")).join("")}
@@ -681,10 +703,10 @@ function buildSetsTable(rows, options) {
 }
 
 function formatSetCell(key, value) {
-  if (state.data.columns.parameters.includes(key)) return escapeHtml(formatParameterValue(value, key));
+  if (state.data.columns.parameters.includes(key)) return escapeHtml(formatTableParameterValue(value, key));
   if (key === "rank" || key === "monthsTested" || key === "profitableMonths") return formatInteger(value);
   if (key.includes("Factor")) return formatNumber(value, 3);
-  if (key.includes("Trades")) return formatNumber(value, 1);
+  if (key.includes("Trades")) return formatInteger(value);
   if (key.includes("Dd") || key.includes("DD")) return formatNumber(value, 2);
   if (key === "robustnessScore") return formatNumber(value, 1);
   return formatMoney(value);
@@ -693,15 +715,15 @@ function formatSetCell(key, value) {
 function renderPassesTable() {
   const columns = [
     ["Pass", "Pass"],
-    ["_month", "Miesiąc"],
+    ["_month", "Mies."],
     ["Profit", "Profit"],
-    ["Result", "Result"],
+    ["Result", "Saldo"],
     ["Profit Factor", "PF"],
     ["Recovery Factor", "RF"],
     ["Sharpe Ratio", "Sharpe"],
-    ["Equity DD %", "DD %"],
+    ["Equity DD %", "DD%"],
     ["Trades", "Trans."],
-    ...state.data.columns.parameters.map((column) => [column, shortSettingName(column)]),
+    ...state.data.columns.parameters.map((column) => [column, tableSettingName(column)]),
   ];
 
   el.passesCountLabel.textContent = `${formatInteger(state.filteredPasses.length)} passów`;
@@ -715,7 +737,7 @@ function renderPassesTable() {
               const value = row[key];
               const isText = key === "_month" || state.data.columns.parameters.includes(key);
               const className = key === "Profit" ? metricClass(value) : isText ? "text" : "";
-              return `<td class="${className}">${formatPassCell(key, value)}</td>`;
+              return `<td class="${className} ${columnClass(key)}">${formatPassCell(key, value)}</td>`;
             })
             .join("")}
         </tr>
@@ -724,7 +746,8 @@ function renderPassesTable() {
     .join("");
 
   el.passesTable.innerHTML = `
-    <table>
+    <table class="data-table">
+      ${buildColGroup(columns, "pass")}
       <thead>
         <tr>${columns.map(([key, label]) => sortableHeader(label, key, "pass")).join("")}</tr>
       </thead>
@@ -738,25 +761,83 @@ function formatPassCell(key, value) {
   if (key === "Pass" || key === "Trades") return formatInteger(value);
   if (["Profit Factor", "Recovery Factor", "Sharpe Ratio"].includes(key)) return formatNumber(value, 3);
   if (key === "Equity DD %") return formatNumber(value, 2);
-  if (state.data.columns.parameters.includes(key)) return escapeHtml(formatParameterValue(value, key));
+  if (state.data.columns.parameters.includes(key)) return escapeHtml(formatTableParameterValue(value, key));
   return formatMoney(value);
 }
 
 function sortableHeader(label, key, type) {
   const sort = type === "set" ? state.setSort : state.passSort;
-  const marker = sort.key === key ? (sort.direction === "asc" ? " ↑" : " ↓") : "";
+  const marker = sort.key === key ? (sort.direction === "asc" ? "↑" : "↓") : "";
   const tooltip = headerTooltip(key, label);
   return `
-    <th title="${escapeHtml(tooltip)}">
+    <th class="${columnClass(key)}" title="${escapeHtml(tooltip)}">
       <button
         type="button"
         data-sort-type="${type}"
         data-sort-key="${escapeHtml(key)}"
         title="${escapeHtml(tooltip)}"
         aria-label="${escapeHtml(`${tooltip}. Kliknij, aby sortować.`)}"
-      >${escapeHtml(label)}${marker}</button>
+      >${headerLabelHtml(label, marker)}</button>
     </th>
   `;
+}
+
+function headerLabelHtml(label, marker) {
+  const parts = String(label).trim().split(/\s+/).filter(Boolean);
+  const lines =
+    parts.length > 1
+      ? parts.map((part) => `<span>${escapeHtml(part)}</span>`).join("")
+      : `<span>${escapeHtml(parts[0] || label)}</span>`;
+  const markerHtml = marker ? `<span class="sort-marker">${escapeHtml(marker)}</span>` : "";
+  return `<span class="th-label">${lines}</span>${markerHtml}`;
+}
+
+function buildColGroup(columns, type) {
+  return `<colgroup>${columns
+    .map(([key]) => `<col class="${columnClass(key)}" style="width: ${columnWidth(key, type)};">`)
+    .join("")}</colgroup>`;
+}
+
+function columnClass(key) {
+  return `col-${String(key)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+}
+
+function columnWidth(key, type) {
+  const widths = {
+    rank: "3.1%",
+    robustnessScore: "4.5%",
+    monthsTested: "3.6%",
+    profitableMonths: "4.4%",
+    totalProfit: "5.1%",
+    medianMonthlyProfit: "4.8%",
+    worstMonthProfit: "4.9%",
+    avgProfitFactor: "4.2%",
+    minProfitFactor: "4.2%",
+    avgRecoveryFactor: "4.2%",
+    maxEquityDdPct: "4.1%",
+    avgTrades: "3.9%",
+    Pass: "3.7%",
+    _month: "5.2%",
+    Profit: "4.9%",
+    Result: "4.9%",
+    "Profit Factor": "4.1%",
+    "Recovery Factor": "4.1%",
+    "Sharpe Ratio": "4.7%",
+    "Equity DD %": "4.1%",
+    Trades: "4.1%",
+    LotyTP2: "3.4%",
+    OdstepWejsciaPipsy: "4.3%",
+    UzyjBreakEvenPoTP1: "4.2%",
+    GodzinaStartuZakresu: "4.2%",
+    MinutaStartuZakresu: "4.3%",
+    GodzinaKoncaZakresu: "4.3%",
+    MinutaKoncaZakresu: "4.4%",
+    UsunPrzeciwneZleceniePoAktywacji: "5.4%",
+  };
+  return widths[key] || (type === "pass" ? "4.2%" : "4.5%");
 }
 
 function headerTooltip(key, label) {
@@ -772,7 +853,7 @@ function headerTooltip(key, label) {
     minProfitFactor: "Minimalny Profit Factor",
     avgRecoveryFactor: "Średni Recovery Factor",
     maxEquityDdPct: "Maksymalny procentowy drawdown kapitału",
-    avgTrades: "Średnia liczba transakcji",
+    avgTrades: "Liczba transakcji",
     Pass: "Numer passu z optymalizatora MetaTrader",
     _month: "Miesiąc testu",
     Profit: "Profit",

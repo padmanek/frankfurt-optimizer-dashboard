@@ -488,23 +488,27 @@ canvas {
 }
 
 .table-wrap {
-  overflow: auto;
+  overflow-x: visible;
+  overflow-y: auto;
   max-height: 690px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 0;
+  table-layout: fixed;
+  font-size: 0.78rem;
 }
 
 th,
 td {
   border-bottom: 1px solid var(--line);
-  padding: 10px 12px;
+  padding: 7px 5px;
   text-align: right;
   vertical-align: top;
   white-space: nowrap;
+  line-height: 1.18;
 }
 
 th:first-child,
@@ -520,17 +524,44 @@ th {
   z-index: 1;
   background: #f9fbfc;
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   font-weight: 850;
   text-transform: uppercase;
 }
 
 th button {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   text-transform: inherit;
+  line-height: 1.02;
+  text-align: right;
+}
+
+th:first-child button,
+th.text button {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.th-label {
+  display: inline-flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.sort-marker {
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 tbody tr:hover {
@@ -572,6 +603,7 @@ tbody tr:hover {
 
 .parameter-cell {
   color: #35434b;
+  font-size: 0.76rem;
   font-weight: 750;
   text-align: center;
 }
@@ -700,6 +732,10 @@ code {
 
   .metric-meta {
     text-align: left;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
   }
 
   table {

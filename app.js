@@ -431,11 +431,15 @@ function renderHeader() {
   const overall = state.data.overall;
   const reportWord = overall.reportCount === 1 ? "raport" : "raporty";
   const monthsWord = overall.monthCount === 1 ? "miesiąc" : "miesiące";
+  const normalizationNote = state.data.riskNormalization?.enabled
+    ? ", TP1-only przeliczone do 100 USD ryzyka"
+    : "";
   el.dataSummary.textContent =
     `${formatInteger(overall.reportCount)} ${reportWord}, ` +
     `${formatInteger(overall.monthCount)} ${monthsWord}, ` +
     `${formatInteger(overall.rowCount)} passów, ` +
-    `wygenerowano ${new Date(state.data.generatedAt).toLocaleString("pl-PL")}`;
+    `wygenerowano ${new Date(state.data.generatedAt).toLocaleString("pl-PL")}` +
+    normalizationNote;
 }
 
 function renderParameterGuide() {
@@ -621,11 +625,11 @@ function parameterDescription(name) {
     UzyjRyzykaKwotowego:
       "Włącza automatyczne liczenie wielkości pozycji z podanej kwoty ryzyka zamiast ręcznego lota.",
     RyzykoKwotoweNaZlecenie:
-      "Kwota, którą robot ma ryzykować na jedną część zlecenia, gdy działa tryb ryzyka kwotowego.",
+      "Kwota ryzyka na jedną część zlecenia. Przy TP1 + TP2 są dwie części po 50 USD, a wariant tylko TP1 w dashboardzie jest szacowany jako jedno zlecenie 100 USD.",
     LotyTP1:
       "Pierwsza część wejścia z bliższym take profitem. W trybie ryzyka kwotowego wartość większa od zera oznacza, że ta część jest włączona.",
     LotyTP2:
-      "Druga część wejścia z dalszym take profitem. W tej optymalizacji testowane było, czy ta część ma być wyłączona czy włączona.",
+      "Druga część wejścia z dalszym take profitem. Gdy TP2 jest nieaktywne, dashboard szacuje wynik TP1 tak, jakby jedna transakcja ryzykowała 100 USD.",
     WartoscPipsa:
       "Przelicznik pipsów na cenę instrumentu. Dla testowanego złota ustawiono 0.1.",
     OdstepWejsciaPipsy:
@@ -1023,12 +1027,12 @@ function headerTooltip(key, label) {
     avgTrades: "Liczba transakcji",
     Pass: "Numer passu z optymalizatora MetaTrader",
     _month: "Miesiąc testu",
-    Profit: "Profit",
-    Result: "Końcowy stan konta po teście",
+    Profit: "Profit po normalizacji ryzyka. Dla TP2 = nie jest to estymacja x2 do 100 USD ryzyka na setup.",
+    Result: "Końcowy stan konta po normalizacji ryzyka",
     "Profit Factor": "Profit Factor",
     "Recovery Factor": "Recovery Factor",
     "Sharpe Ratio": "Sharpe Ratio",
-    "Equity DD %": "Procentowy drawdown kapitału",
+    "Equity DD %": "Procentowy drawdown kapitału. Dla TP2 = nie jest estymowany x2.",
     Trades: "Liczba transakcji",
   };
 
@@ -1229,12 +1233,33 @@ function renderPassDetail(pass) {
     ["Sharpe", formatNumber(pass["Sharpe Ratio"], 3), ""],
     ["Raport", valueLabel(pass._sourceFile), "wide"],
   ];
+  const rawMetrics = pass._riskAdjusted
+    ? [
+        ["Mnożnik", `x${formatNumber(pass._riskMultiplier, 0)}`, ""],
+        ["Profit surowy", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
+        ["Saldo surowe", formatMoney(pass._rawResult), ""],
+        ["DD surowe", `${formatNumber(pass._rawEquityDdPct, 2)}%`, ""],
+      ]
+    : [];
 
   return `
     <section class="detail-section">
       <h3>Wynik passu</h3>
       ${renderDetailCards(metrics)}
     </section>
+    ${
+      pass._riskAdjusted
+        ? `<section class="detail-section">
+            <h3>Estymacja ryzyka</h3>
+            <p class="detail-note">
+              Ten pass ma TP2 = nie. Oryginalny test ryzykował 50 USD na jedno zlecenie TP1, a dashboard
+              pokazuje estymację dla 100 USD ryzyka na setup: profit, saldo, payoff i DD% są przeliczone x2.
+              PF, RF, Sharpe i liczba transakcji zostają z raportu.
+            </p>
+            ${renderDetailCards(rawMetrics)}
+          </section>`
+        : ""
+    }
   `;
 }
 

@@ -167,6 +167,15 @@ h2 {
   color: #35434b;
 }
 
+.risk-note,
+.detail-note {
+  border-left: 4px solid var(--amber);
+  padding: 8px 10px;
+  background: var(--amber-soft);
+  color: #503514;
+  font-weight: 650;
+}
+
 .parameter-guide {
   display: grid;
   grid-template-columns: repeat(3, minmax(180px, 1fr));
@@ -895,6 +904,11 @@ tbody tr:hover {
   margin: 0 0 10px;
   color: var(--accent-strong);
   font-size: 0.95rem;
+}
+
+.detail-section .detail-note {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
 }
 
 .detail-card-grid,

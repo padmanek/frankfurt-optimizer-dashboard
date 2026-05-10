@@ -132,14 +132,9 @@ function setupControls() {
     render();
   };
 
-  [
-    el.monthFilter,
-    el.minProfitFilter,
-    el.maxDdFilter,
-    el.minPfFilter,
-    el.minRfFilter,
-    el.minTradesFilter,
-  ].forEach((input) => input.addEventListener("input", rerender));
+  [el.minProfitFilter, el.maxDdFilter, el.minPfFilter, el.minRfFilter, el.minTradesFilter].forEach((input) =>
+    input.addEventListener("input", rerender),
+  );
 
   el.resetFiltersButton.addEventListener("click", () => {
     resetFilters();
@@ -182,10 +177,15 @@ function setupControls() {
 
 function populateStaticControls() {
   const months = state.data.overall.months || [];
-  el.monthFilter.innerHTML = [
-    `<option value="">Wszystkie</option>`,
-    ...months.map((month) => `<option value="${escapeHtml(month)}">${escapeHtml(month)}</option>`),
-  ].join("");
+  el.monthFilter.querySelector(".checkbox-group").innerHTML = months
+    .map(
+      (month) =>
+        `<label class="checkbox-chip">
+          <input type="checkbox" data-month-filter value="${escapeHtml(month)}" />
+          <span>${escapeHtml(month)}</span>
+        </label>`,
+    )
+    .join("");
 
   const parameterOptions = state.data.columns.parameters.map((name) => {
     return `<option value="${escapeHtml(name)}">${escapeHtml(shortSettingName(name))}</option>`;
@@ -236,6 +236,20 @@ function populateStaticControls() {
       toggleParameterFilterMenu(button.closest("[data-parameter-filter-group]"));
     });
   });
+  el.monthFilter.querySelector("[data-month-filter-toggle]").addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleMonthFilterMenu();
+  });
+  el.monthFilter.querySelector(".checkbox-menu").addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+  el.monthFilter.querySelectorAll("[data-month-filter]").forEach((input) => {
+    input.addEventListener("change", () => {
+      updateMonthFilterLabel();
+      applyFilters();
+      render();
+    });
+  });
   el.parameterFilterGrid.querySelectorAll(".checkbox-menu").forEach((menu) => {
     menu.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -250,10 +264,17 @@ function populateStaticControls() {
       render();
     });
   });
-  document.addEventListener("click", closeParameterFilterMenus);
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeParameterFilterMenus();
+  document.addEventListener("click", () => {
+    closeMonthFilterMenu();
+    closeParameterFilterMenus();
   });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeMonthFilterMenu();
+      closeParameterFilterMenus();
+    }
+  });
+  updateMonthFilterLabel();
   syncDependentParameterFilters();
   updateParameterFilterLabels();
 }
@@ -298,12 +319,52 @@ function checkedParameterValues(name) {
     .map((input) => input.value);
 }
 
+function getMonthFilterInputs() {
+  return [...el.monthFilter.querySelectorAll("[data-month-filter]")];
+}
+
+function checkedMonthValues() {
+  return getMonthFilterInputs()
+    .filter((input) => input.checked)
+    .map((input) => input.value);
+}
+
+function toggleMonthFilterMenu() {
+  const menu = el.monthFilter.querySelector(".checkbox-menu");
+  const button = el.monthFilter.querySelector("[data-month-filter-toggle]");
+  if (!menu || !button) return;
+  const shouldOpen = menu.hidden;
+  closeParameterFilterMenus();
+  menu.hidden = !shouldOpen;
+  button.setAttribute("aria-expanded", String(shouldOpen));
+}
+
+function closeMonthFilterMenu() {
+  const menu = el.monthFilter.querySelector(".checkbox-menu");
+  const button = el.monthFilter.querySelector("[data-month-filter-toggle]");
+  if (menu) menu.hidden = true;
+  if (button) button.setAttribute("aria-expanded", "false");
+}
+
+function updateMonthFilterLabel() {
+  const button = el.monthFilter.querySelector("[data-month-filter-toggle]");
+  const label = el.monthFilter.querySelector(".multi-filter-value");
+  if (!button || !label) return;
+  const selected = getMonthFilterInputs()
+    .filter((input) => input.checked)
+    .map((input) => input.closest(".checkbox-chip").querySelector("span").textContent.trim());
+  label.textContent =
+    selected.length === 0 ? "Wszystkie" : selected.length <= 3 ? selected.join(", ") : `${selected.length} wybrane`;
+  button.classList.toggle("active", selected.length > 0);
+}
+
 function toggleParameterFilterMenu(group) {
   if (!group || group.classList.contains("filter-disabled")) return;
   const menu = group.querySelector(".checkbox-menu");
   const button = group.querySelector("[data-filter-toggle]");
   if (!menu || !button) return;
   const shouldOpen = menu.hidden;
+  closeMonthFilterMenu();
   closeParameterFilterMenus(group);
   menu.hidden = !shouldOpen;
   button.setAttribute("aria-expanded", String(shouldOpen));
@@ -366,7 +427,9 @@ function syncDependentParameterFilters() {
 }
 
 function resetFilters() {
-  el.monthFilter.value = "";
+  getMonthFilterInputs().forEach((input) => {
+    input.checked = false;
+  });
   el.minProfitFilter.value = "";
   el.maxDdFilter.value = "";
   el.minPfFilter.value = "";
@@ -375,20 +438,22 @@ function resetFilters() {
   el.parameterFilterGrid.querySelectorAll("[data-parameter-filter]").forEach((input) => {
     input.checked = false;
   });
+  updateMonthFilterLabel();
   syncDependentParameterFilters();
   updateParameterFilterLabels();
+  closeMonthFilterMenu();
   closeParameterFilterMenus();
 }
 
 function passMatchesFilters(row) {
-  const month = el.monthFilter.value;
+  const selectedMonths = checkedMonthValues();
   const minProfit = el.minProfitFilter.value;
   const maxDd = el.maxDdFilter.value;
   const minPf = el.minPfFilter.value;
   const minRf = el.minRfFilter.value;
   const minTrades = el.minTradesFilter.value;
 
-  if (month && row._month !== month) return false;
+  if (selectedMonths.length && !selectedMonths.includes(row._month)) return false;
   if (minProfit !== "" && number(row.Profit) < number(minProfit)) return false;
   if (maxDd !== "" && number(row["Equity DD %"]) > number(maxDd)) return false;
   if (minPf !== "" && number(row["Profit Factor"]) < number(minPf)) return false;

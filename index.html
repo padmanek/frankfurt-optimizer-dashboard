@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Frankfurt Optimizer Dashboard</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css?v=20260510-6" />
+    <link rel="stylesheet" href="styles.css?v=20260510-7" />
   </head>
   <body>
     <div class="app-shell">
@@ -26,15 +26,15 @@
           <div class="strategy-content">
             <div class="strategy-copy">
               <p>
-                EA mierzy poranny zakres ceny na świecach M15, a po zakończeniu zakresu stawia zlecenia
-                oczekujące nad maksimum i pod minimum. Gdy rynek wybije górą, aktywuje się kupno; gdy wybije
-                dołem, aktywuje się sprzedaż.
+                Mierzymy zakres ceny na świecach M15 w wybranych ramach czasowych, a po zakończeniu zakresu
+                stawiamy zlecenia oczekujące nad maksimum i pod minimum. Gdy rynek wybije górą, aktywuje się
+                kupno; gdy wybije dołem, aktywuje się sprzedaż.
               </p>
               <p>
-                Jeśli gramy tylko TP1, traktujemy setup jako jedno zlecenie z ryzykiem 100 USD, stop lossem
-                50 pipsów i take profitem 100 pipsów. Jeśli gramy TP1 + TP2, robot otwiera dwa osobne zlecenia
+                Gdy gramy tylko TP1, traktujemy setup jako jedno zlecenie z ryzykiem 100 USD, stop lossem
+                50 pipsów i take profitem 100 pipsów. Gdy gramy TP1 + TP2, otwieramy dwa osobne zlecenia
                 po 50 USD ryzyka każde: pierwsze ma TP1 na 100 pipsów, a drugie TP2 na 200 pipsów. Jeśli break
-                even po TP1 jest włączony, po osiągnięciu TP1 stop loss zlecenia TP2 jest przesuwany na okolice
+                even po TP1 jest włączony, po osiągnięciu TP1 przesuwamy stop loss zlecenia TP2 na okolice
                 wejścia.
               </p>
             </div>
@@ -44,10 +44,21 @@
 
         <section class="panel filter-panel" aria-label="Filtry">
           <div class="filter-grid">
-            <label>
-              <span title="Miesiąc lub zakres dat raportu optymalizacji.">Miesiąc</span>
-              <select id="monthFilter"></select>
-            </label>
+            <div id="monthFilter" class="parameter-filter month-filter">
+              <div class="parameter-filter-head" title="Miesiąc lub zakres dat raportu optymalizacji.">Miesiąc</div>
+              <button
+                class="multi-filter-button"
+                type="button"
+                data-month-filter-toggle
+                aria-expanded="false"
+                title="Miesiąc lub zakres dat raportu optymalizacji."
+              >
+                <span class="multi-filter-value">Wszystkie</span>
+              </button>
+              <div class="checkbox-menu" hidden>
+                <div class="checkbox-group"></div>
+              </div>
+            </div>
             <label>
               <span title="Minimalny profit passu. Wyniki poniżej tej wartości zostaną ukryte.">Min. profit</span>
               <input id="minProfitFilter" type="number" step="50" placeholder="0" />
@@ -189,6 +200,6 @@
       </section>
     </div>
 
-    <script src="app.js?v=20260510-6"></script>
+    <script src="app.js?v=20260510-7"></script>
   </body>
 </html>

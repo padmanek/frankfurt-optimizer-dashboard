@@ -496,7 +496,7 @@ function renderKpis() {
   const kpis = [
     ["Passy", formatInteger(rows.length), "po filtrach"],
     ["Profit dodatni", formatPercent(rows.length ? profitable / rows.length : 0), `${formatInteger(profitable)} passów`],
-    ["Mediana profitu", formatMoney(medianProfit), "ważniejsza od piku"],
+    ["Mediana profitu", formatMoney(medianProfit), "typowy wynik passów"],
     ["Max profit", formatMoney(maxProfit), "najlepszy pojedynczy pass"],
     ["Mocne passy", formatInteger(quality), "PF/RF/DD/transakcje"],
     ["Najlepszy score", formatNumber(bestScore, 1), `średni DD ${formatNumber(avgDd, 2)}%`],

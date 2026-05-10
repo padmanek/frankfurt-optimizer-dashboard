@@ -815,7 +815,7 @@ function renderSetsTable() {
 
 function buildSetsTable(rows, options) {
   const metricColumns = [
-    ["rank", "Lp."],
+    ["rank", "Ranking"],
     ["robustnessScore", "Ocena"],
     ["monthsTested", "Mies."],
     ["profitableMonths", "Profit mies."],
@@ -978,7 +978,7 @@ function columnClass(key) {
 
 function columnWidth(key, type) {
   const widths = {
-    rank: "3.1%",
+    rank: "4.2%",
     robustnessScore: "4.5%",
     monthsTested: "3.6%",
     profitableMonths: "4.4%",

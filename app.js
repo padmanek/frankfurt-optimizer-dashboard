@@ -499,7 +499,7 @@ function renderKpis() {
     ["Mediana profitu", formatMoney(medianProfit), "typowy wynik testów"],
     ["Max profit", formatMoney(maxProfit), "najlepszy pojedynczy pass"],
     ["Mocne passy", formatInteger(quality), "PF/RF/DD/transakcje"],
-    ["Najlepszy score", formatNumber(bestScore, 1), `średni DD ${formatNumber(avgDd, 2)}%`],
+    ["Najlepsza ocena", formatNumber(bestScore, 1), `średni DD ${formatNumber(avgDd, 2)}%`],
   ];
 
   el.kpiGrid.innerHTML = kpis
@@ -816,7 +816,7 @@ function renderSetsTable() {
 function buildSetsTable(rows, options) {
   const metricColumns = [
     ["rank", "Lp."],
-    ["robustnessScore", "Score"],
+    ["robustnessScore", "Ocena"],
     ["monthsTested", "Mies."],
     ["profitableMonths", "Profit mies."],
     ["totalProfit", "Suma profit"],
@@ -1014,7 +1014,7 @@ function columnWidth(key, type) {
 function headerTooltip(key, label) {
   const tooltips = {
     rank: "Miejsce w rankingu stabilności",
-    robustnessScore: "Score = mediana profitu / 25 + najgorszy miesiąc / 30 + zyskowne miesiące + jakość + PF/RF + setupy - DD * 1.25. Setupy: TP1-only = 1 transakcja, TP1+TP2 = 2 transakcje.",
+    robustnessScore: "Ocena premiuje wyniki, które zarabiają stabilnie w kilku miesiącach, nie mają słabego najgorszego miesiąca, mają dobry PF/RF i wystarczająco setupów. Wzór: mediana profitu / 25 + najgorszy miesiąc / 30 + zyskowne miesiące + jakość + PF/RF + setupy - DD * 1.25. Setupy: TP1-only = 1 transakcja, TP1+TP2 = 2 transakcje.",
     monthsTested: "Liczba przetestowanych miesięcy",
     profitableMonths: "Liczba miesięcy z dodatnim wynikiem",
     totalProfit: "Suma profitów z miesięcy",
@@ -1265,7 +1265,7 @@ function renderPassDetail(pass) {
 
 function renderSetDetail(setItem) {
   const metrics = [
-    ["Score", formatNumber(setItem.robustnessScore, 1), "score-cell"],
+    ["Ocena", formatNumber(setItem.robustnessScore, 1), "score-cell"],
     ["Miesiące", `${formatInteger(setItem.profitableMonths)} / ${formatInteger(setItem.monthsTested)}`, ""],
     ["Suma profit", formatMoney(setItem.totalProfit), metricClass(setItem.totalProfit)],
     ["Mediana", formatMoney(setItem.medianMonthlyProfit), metricClass(setItem.medianMonthlyProfit)],

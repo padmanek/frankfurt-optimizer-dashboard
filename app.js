@@ -1014,7 +1014,7 @@ function columnWidth(key, type) {
 function headerTooltip(key, label) {
   const tooltips = {
     rank: "Miejsce w rankingu stabilności",
-    robustnessScore: "Score stabilności parametrów. Liczba transakcji jest liczona jako setupy: TP1-only = 1 transakcja na setup, TP1+TP2 = 2 transakcje na setup.",
+    robustnessScore: "Score = mediana profitu / 25 + najgorszy miesiąc / 30 + zyskowne miesiące + jakość + PF/RF + setupy - DD * 1.25. Setupy: TP1-only = 1 transakcja, TP1+TP2 = 2 transakcje.",
     monthsTested: "Liczba przetestowanych miesięcy",
     profitableMonths: "Liczba miesięcy z dodatnim wynikiem",
     totalProfit: "Suma profitów z miesięcy",

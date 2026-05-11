@@ -742,6 +742,37 @@ function padTimePart(value) {
   return String(number(value)).padStart(2, "0");
 }
 
+function formatClock(hour, minute, offsetHours = 0) {
+  const totalMinutes = (((number(hour) * 60 + number(minute) + offsetHours * 60) % 1440) + 1440) % 1440;
+  const displayHour = Math.floor(totalMinutes / 60);
+  const displayMinute = totalMinutes % 60;
+  return `${String(displayHour).padStart(2, "0")}:${String(displayMinute).padStart(2, "0")}`;
+}
+
+function formatVariantTooltip(params) {
+  const startHour = params.GodzinaStartuZakresu;
+  const startMinute = params.MinutaStartuZakresu;
+  const endHour = params.GodzinaKoncaZakresu;
+  const endMinute = params.MinutaKoncaZakresu;
+  const tp2Active = number(params.LotyTP2) > 0;
+  const breakEvenText = tp2Active
+    ? formatParameterValue(params.UzyjBreakEvenPoTP1, "UzyjBreakEvenPoTP1")
+    : "bez znaczenia, bo TP2 jest wyłączony";
+
+  return [
+    "Ustawienia wariantu",
+    `TP2: ${tp2Active ? "aktywny" : "nieaktywny"}`,
+    `Odstęp od zakresu: ${formatInteger(params.OdstepWejsciaPipsy)} pipsów`,
+    `Break even po TP1: ${breakEvenText}`,
+    `Twój czas: ${formatClock(startHour, startMinute)} - ${formatClock(endHour, endMinute)}`,
+    `Quo Markets: ${formatClock(startHour, startMinute, 1)} - ${formatClock(endHour, endMinute, 1)}`,
+    `VEO Markets: ${formatClock(startHour, startMinute, -2)} - ${formatClock(endHour, endMinute, -2)}`,
+    `Przeciwne zlecenie po aktywacji: ${
+      params.UsunPrzeciwneZleceniePoAktywacji ? "usuń" : "zostaw"
+    }`,
+  ].join("\n");
+}
+
 function getSetting(settingsFile, name) {
   return settingsFile.settings.find((item) => item.name === name);
 }
@@ -1005,8 +1036,15 @@ function buildSetsTable(rows, options) {
 
   const tableRows = rows
     .map((row) => {
+      const rowTooltip = formatVariantTooltip(row.params);
       return `
-        <tr class="clickable-row" tabindex="0" data-detail-type="set" data-detail-key="${escapeHtml(String(row.rank))}">
+        <tr
+          class="clickable-row"
+          tabindex="0"
+          data-detail-type="set"
+          data-detail-key="${escapeHtml(String(row.rank))}"
+          title="${escapeHtml(rowTooltip)}"
+        >
           ${columns
             .map(([key]) => {
               const isParameter = state.data.columns.parameters.includes(key);
@@ -1068,8 +1106,15 @@ function renderPassesTable() {
   const rows = state.filteredPasses.slice(0, 700);
   const htmlRows = rows
     .map((row) => {
+      const rowTooltip = formatVariantTooltip(row);
       return `
-        <tr class="clickable-row" tabindex="0" data-detail-type="pass" data-detail-key="${escapeHtml(row._id)}">
+        <tr
+          class="clickable-row"
+          tabindex="0"
+          data-detail-type="pass"
+          data-detail-key="${escapeHtml(row._id)}"
+          title="${escapeHtml(rowTooltip)}"
+        >
           ${columns
             .map(([key]) => {
               const value = row[key];

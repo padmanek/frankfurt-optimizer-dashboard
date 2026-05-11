@@ -464,18 +464,122 @@ function passMatchesFilters(row) {
   return true;
 }
 
-function setMatchesFilteredPasses(setItem, allowedKeys) {
-  return allowedKeys.has(setItem.paramKey);
-}
-
 function applyFilters() {
   state.filteredPasses = state.data.passes.filter(passMatchesFilters);
-  const allowedKeys = new Set(state.filteredPasses.map((row) => row._paramKey));
-  state.filteredSets = state.data.parameterSets.filter((item) =>
-    setMatchesFilteredPasses(item, allowedKeys),
-  );
+  state.filteredSets = summarizeFilteredSets(state.filteredPasses);
   sortRows(state.filteredPasses, state.passSort);
   sortRows(state.filteredSets, state.setSort);
+}
+
+function summarizeFilteredSets(rows) {
+  const parameterColumns = state.data.columns.parameters;
+  const selectedMonths = checkedMonthValues();
+  const totalMonthCount = Math.max(1, selectedMonths.length || state.data.overall.monthCount || 1);
+  const grouped = new Map();
+
+  rows.forEach((row) => {
+    if (!grouped.has(row._paramKey)) grouped.set(row._paramKey, []);
+    grouped.get(row._paramKey).push(row);
+  });
+
+  const summaries = [...grouped.entries()].map(([paramKey, groupRows]) => {
+    const params = Object.fromEntries(parameterColumns.map((name) => [name, groupRows[0][name]]));
+    const byMonth = new Map();
+    groupRows.forEach((row) => {
+      if (!byMonth.has(row._month)) byMonth.set(row._month, []);
+      byMonth.get(row._month).push(row);
+    });
+
+    const monthly = [...byMonth.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, monthRows]) => {
+        const profits = monthRows.map((row) => number(row.Profit));
+        const pfs = monthRows.map((row) => number(row["Profit Factor"]));
+        const rfs = monthRows.map((row) => number(row["Recovery Factor"]));
+        const dds = monthRows.map((row) => number(row["Equity DD %"]));
+        const trades = monthRows.map((row) => number(row.Trades));
+        const topRow = monthRows.reduce((best, row) => (number(row.Profit) > number(best.Profit) ? row : best), monthRows[0]);
+        return {
+          month,
+          count: monthRows.length,
+          meanProfit: average(profits),
+          medianProfit: median(profits),
+          bestProfit: Math.max(...profits),
+          worstProfit: Math.min(...profits),
+          avgProfitFactor: average(pfs),
+          minProfitFactor: Math.min(...pfs),
+          avgRecoveryFactor: average(rfs),
+          minRecoveryFactor: Math.min(...rfs),
+          maxEquityDdPct: Math.max(...dds),
+          avgTrades: average(trades),
+          topPass: topRow.Pass,
+          quality: monthRows.some((row) => row._quality),
+        };
+      });
+
+    const monthlyProfits = monthly.map((item) => item.meanProfit);
+    const monthsTested = monthly.length;
+    const profitableMonths = monthlyProfits.filter((value) => value > 0).length;
+    const qualityMonths = monthly.filter((item) => item.quality).length;
+    const profitablePct = monthsTested ? profitableMonths / monthsTested : 0;
+    const qualityPct = monthsTested ? qualityMonths / monthsTested : 0;
+    const coverage = monthsTested / totalMonthCount;
+    const medianProfit = median(monthlyProfits);
+    const worstProfit = monthlyProfits.length ? Math.min(...monthlyProfits) : 0;
+    const avgPf = average(monthly.map((item) => item.avgProfitFactor));
+    const minPf = monthly.length ? Math.min(...monthly.map((item) => item.minProfitFactor)) : 0;
+    const avgRf = average(monthly.map((item) => item.avgRecoveryFactor));
+    const minRf = monthly.length ? Math.min(...monthly.map((item) => item.minRecoveryFactor)) : 0;
+    const maxDd = monthly.length ? Math.max(...monthly.map((item) => item.maxEquityDdPct)) : 0;
+    const avgTrades = average(monthly.map((item) => item.avgTrades));
+    const scoringSetups = number(params.LotyTP2) > 0 ? avgTrades / 2 : avgTrades;
+    const topRow = groupRows.reduce((best, row) => (number(row.Profit) > number(best.Profit) ? row : best), groupRows[0]);
+    const score =
+      clamp(medianProfit / 25, -80, 80) +
+      clamp(worstProfit / 30, -60, 60) +
+      profitablePct * 40 +
+      qualityPct * 20 +
+      coverage * 20 +
+      clamp((avgPf - 1) * 14, -25, 45) +
+      clamp((minPf - 1) * 10, -25, 30) +
+      clamp(avgRf * 5, -20, 35) +
+      clamp(minRf * 4, -20, 25) +
+      clamp((scoringSetups / 15) * 15, 0, 15) -
+      maxDd * 1.25;
+
+    return {
+      paramKey,
+      params,
+      passCount: groupRows.length,
+      monthsTested,
+      profitableMonths,
+      profitableMonthPct: profitablePct,
+      qualityMonths,
+      qualityMonthPct: qualityPct,
+      totalProfit: monthlyProfits.reduce((sum, value) => sum + value, 0),
+      medianMonthlyProfit: medianProfit,
+      worstMonthProfit: worstProfit,
+      bestMonthProfit: monthlyProfits.length ? Math.max(...monthlyProfits) : 0,
+      avgProfitFactor: avgPf,
+      minProfitFactor: minPf,
+      avgRecoveryFactor: avgRf,
+      minRecoveryFactor: minRf,
+      maxEquityDdPct: maxDd,
+      avgTrades,
+      scoringSetups,
+      robustnessScore: score,
+      topPass: topRow.Pass,
+      topReportId: topRow._reportId,
+      topMonth: topRow._month,
+      monthly,
+    };
+  });
+
+  summaries.sort((a, b) => b.robustnessScore - a.robustnessScore);
+  summaries.forEach((item, index) => {
+    item.rank = index + 1;
+  });
+  return summaries;
 }
 
 function render() {
@@ -1263,8 +1367,9 @@ function openResultDetail(type, key) {
   const pass = type === "pass" ? state.data.passes.find((row) => row._id === key) : null;
   const setItem =
     type === "set"
-      ? state.data.parameterSets.find((item) => String(item.rank) === String(key))
-      : state.data.parameterSets.find((item) => item.paramKey === pass?._paramKey);
+      ? state.filteredSets.find((item) => String(item.rank) === String(key))
+      : state.filteredSets.find((item) => item.paramKey === pass?._paramKey) ||
+        state.data.parameterSets.find((item) => item.paramKey === pass?._paramKey);
 
   if (!setItem && !pass) return;
 
@@ -1440,6 +1545,10 @@ function average(values) {
   const clean = values.filter((value) => Number.isFinite(number(value)));
   if (!clean.length) return 0;
   return clean.reduce((sum, value) => sum + number(value), 0) / clean.length;
+}
+
+function clamp(value, low, high) {
+  return Math.max(low, Math.min(high, value));
 }
 
 function median(values) {

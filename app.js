@@ -47,6 +47,7 @@ const el = {
   resultDetail: document.querySelector("#resultDetail"),
   detailTitle: document.querySelector("#detailTitle"),
   detailEyebrow: document.querySelector("#detailEyebrow"),
+  busyIndicator: document.querySelector("#busyIndicator"),
   loadError: document.querySelector("#loadError"),
 };
 
@@ -293,6 +294,9 @@ function scheduleDashboardUpdate() {
 function setDashboardBusy(isBusy) {
   document.body.classList.toggle("dashboard-busy", isBusy);
   document.body.setAttribute("aria-busy", isBusy ? "true" : "false");
+  if (el.busyIndicator) {
+    el.busyIndicator.hidden = !isBusy;
+  }
 }
 
 function uniqueParameterValues(name) {

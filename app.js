@@ -11,8 +11,8 @@ const state = {
   filteredPasses: [],
   filteredSets: [],
   activeView: "overview",
-  passSort: { key: "Profit", direction: "desc" },
-  setSort: { key: "robustnessScore", direction: "desc" },
+  passSort: [{ key: "Profit", direction: "desc" }],
+  setSort: [{ key: "totalProfit", direction: "desc" }],
 };
 
 const el = {
@@ -660,7 +660,7 @@ function renderKpis() {
   const maxProfit = profits.length ? Math.max(...profits) : 0;
   const medianProfit = median(profits);
   const avgDd = average(rows.map((row) => number(row["Equity DD %"])));
-  const bestScore = state.filteredSets.length ? state.filteredSets[0].robustnessScore : 0;
+  const bestSetProfit = state.filteredSets.length ? state.filteredSets[0].totalProfit : 0;
 
   const kpis = [
     ["Passy", formatInteger(rows.length), "po filtrach"],
@@ -668,7 +668,7 @@ function renderKpis() {
     ["Mediana profitu", formatMoney(medianProfit), "typowy wynik testów"],
     ["Max profit", formatMoney(maxProfit), "najlepszy pojedynczy pass"],
     ["Mocne passy", formatInteger(quality), "PF/RF/DD/transakcje"],
-    ["Najlepsza ocena", formatNumber(bestScore, 1), `średni DD ${formatNumber(avgDd, 2)}%`],
+    ["Najlepszy zestaw", formatMoney(bestSetProfit), `średni DD ${formatNumber(avgDd, 2)}%`],
   ];
 
   el.kpiGrid.innerHTML = kpis
@@ -804,6 +804,20 @@ function shortSettingName(name) {
     NumerMagiczny: "Magic number",
   };
   return labels[name] || name;
+}
+
+function fullSettingName(name) {
+  const labels = {
+    LotyTP2: "TP2",
+    OdstepWejsciaPipsy: "Odstęp od zakresu w pipsach",
+    UzyjBreakEvenPoTP1: "Break even po TP1",
+    GodzinaStartuZakresu: "Godzina startu zakresu",
+    MinutaStartuZakresu: "Minuta startu zakresu",
+    GodzinaKoncaZakresu: "Godzina końca zakresu",
+    MinutaKoncaZakresu: "Minuta końca zakresu",
+    UsunPrzeciwneZleceniePoAktywacji: "Usuwanie przeciwnego zlecenia",
+  };
+  return labels[name] || shortSettingName(name);
 }
 
 function tableSettingName(name) {
@@ -1016,7 +1030,6 @@ function renderSetsTable() {
 function buildSetsTable(rows, options) {
   const metricColumns = [
     ["rank", "Ranking"],
-    ["robustnessScore", "Ocena"],
     ["monthsTested", "Mies."],
     ["profitableMonths", "Profit mies."],
     ["totalProfit", "Suma profit"],
@@ -1035,27 +1048,27 @@ function buildSetsTable(rows, options) {
   const columns = [...metricColumns, ...parameterColumns];
 
   const tableRows = rows
-    .map((row) => {
+    .map((row, index) => {
       const rowTooltip = formatVariantTooltip(row.params);
       return `
         <tr
           class="clickable-row"
           tabindex="0"
           data-detail-type="set"
-          data-detail-key="${escapeHtml(String(row.rank))}"
+          data-detail-key="${escapeHtml(row.paramKey)}"
           title="${escapeHtml(rowTooltip)}"
         >
           ${columns
             .map(([key]) => {
               const isParameter = state.data.columns.parameters.includes(key);
-              const value = isParameter ? row.params[key] : row[key];
+              const value = key === "rank" ? index + 1 : isParameter ? row.params[key] : row[key];
               const className = isParameter
                 ? "parameter-cell"
                 : key.includes("Profit") || key.includes("Monthly")
                   ? metricClass(value)
                   : "";
               const content = formatSetCell(key, value, row.params);
-              return `<td class="${className} ${key === "robustnessScore" ? "score-cell" : ""} ${columnClass(key)}">${content}</td>`;
+              return `<td class="${className} ${columnClass(key)}">${content}</td>`;
             })
             .join("")}
         </tr>
@@ -1064,6 +1077,7 @@ function buildSetsTable(rows, options) {
     .join("");
 
   return `
+    ${buildSortToolbar("set")}
     <table class="data-table">
       ${buildColGroup(columns, "set")}
       <thead>
@@ -1084,7 +1098,6 @@ function formatSetCell(key, value, context = null) {
   if (key.includes("Factor")) return formatNumber(value, 3);
   if (key.includes("Trades")) return formatInteger(value);
   if (key.includes("Dd") || key.includes("DD")) return formatNumber(value, 2);
-  if (key === "robustnessScore") return formatNumber(value, 1);
   return formatMoney(value);
 }
 
@@ -1129,6 +1142,7 @@ function renderPassesTable() {
     .join("");
 
   el.passesTable.innerHTML = `
+    ${buildSortToolbar("pass")}
     <table class="data-table">
       ${buildColGroup(columns, "pass")}
       <thead>
@@ -1137,6 +1151,47 @@ function renderPassesTable() {
       <tbody>${htmlRows || emptyRow(columns.length)}</tbody>
     </table>
   `;
+}
+
+function buildSortToolbar(type) {
+  const sort = type === "set" ? state.setSort : state.passSort;
+  const labels = sort.map((item, index) => {
+    const label = sortLabel(item.key);
+    const direction = item.direction === "asc" ? "rosnąco" : "malejąco";
+    return `${index + 1}. ${label} ${direction}`;
+  });
+  return `
+    <div class="sort-toolbar">
+      <span>Sortowanie: ${escapeHtml(labels.join(" · "))}</span>
+      <button class="button tiny secondary" type="button" data-sort-clear="${type}">Domyślne sortowanie</button>
+    </div>
+  `;
+}
+
+function sortLabel(key) {
+  const labels = {
+    rank: "Ranking",
+    monthsTested: "Miesiące",
+    profitableMonths: "Profit mies.",
+    totalProfit: "Suma profit",
+    medianMonthlyProfit: "Mediana",
+    worstMonthProfit: "Najgorszy",
+    avgProfitFactor: "Śr. PF",
+    minProfitFactor: "Min PF",
+    avgRecoveryFactor: "Śr. RF",
+    maxEquityDdPct: "DD%",
+    avgTrades: "Transakcje",
+    Pass: "Pass",
+    _month: "Miesiąc",
+    Profit: "Profit",
+    Result: "Saldo",
+    "Profit Factor": "PF",
+    "Recovery Factor": "RF",
+    "Sharpe Ratio": "Sharpe",
+    "Equity DD %": "DD%",
+    Trades: "Transakcje",
+  };
+  return labels[key] || tableSettingName(key);
 }
 
 function formatPassCell(key, value, context = null) {
@@ -1152,17 +1207,34 @@ function formatPassCell(key, value, context = null) {
 
 function sortableHeader(label, key, type) {
   const sort = type === "set" ? state.setSort : state.passSort;
-  const marker = sort.key === key ? (sort.direction === "asc" ? "↑" : "↓") : "";
+  const sortIndex = sort.findIndex((item) => item.key === key);
+  const sortItem = sortIndex >= 0 ? sort[sortIndex] : null;
+  const marker = sortItem ? String(sortIndex + 1) : "";
   const tooltip = headerTooltip(key, label);
+  const sortHint = "Użyj strzałek: w górę sortuje od najmniejszej wartości, w dół od największej. Kolejne kolumny dodają następny warunek sortowania.";
   return `
-    <th class="${columnClass(key)}" title="${escapeHtml(tooltip)}">
-      <button
-        type="button"
-        data-sort-type="${type}"
-        data-sort-key="${escapeHtml(key)}"
-        title="${escapeHtml(tooltip)}"
-        aria-label="${escapeHtml(`${tooltip}. Kliknij, aby sortować.`)}"
-      >${headerLabelHtml(label, marker)}</button>
+    <th class="${columnClass(key)} ${sortItem ? "sorted-column" : ""}" title="${escapeHtml(tooltip)}">
+      <div class="th-content">
+        ${headerLabelHtml(label, marker)}
+        <span class="sort-controls" aria-label="${escapeHtml(`${tooltip}. ${sortHint}`)}">
+          <button
+            type="button"
+            class="sort-control ${sortItem?.direction === "asc" ? "active" : ""}"
+            data-sort-type="${type}"
+            data-sort-key="${escapeHtml(key)}"
+            data-sort-direction="asc"
+            title="${escapeHtml(`${tooltip}\nSortuj od najmniejszej wartości.`)}"
+          >↑</button>
+          <button
+            type="button"
+            class="sort-control ${sortItem?.direction === "desc" ? "active" : ""}"
+            data-sort-type="${type}"
+            data-sort-key="${escapeHtml(key)}"
+            data-sort-direction="desc"
+            title="${escapeHtml(`${tooltip}\nSortuj od największej wartości.`)}"
+          >↓</button>
+        </span>
+      </div>
     </th>
   `;
 }
@@ -1193,7 +1265,6 @@ function columnClass(key) {
 function columnWidth(key, type) {
   const widths = {
     rank: "4.2%",
-    robustnessScore: "4.5%",
     monthsTested: "3.6%",
     profitableMonths: "4.4%",
     totalProfit: "5.1%",
@@ -1227,8 +1298,7 @@ function columnWidth(key, type) {
 
 function headerTooltip(key, label) {
   const tooltips = {
-    rank: "Miejsce w rankingu stabilności",
-    robustnessScore: "Ocena premiuje wyniki, które zarabiają stabilnie w kilku miesiącach, nie mają słabego najgorszego miesiąca, mają dobry PF/RF i wystarczająco setupów. Wzór: mediana profitu / 25 + najgorszy miesiąc / 30 + zyskowne miesiące + jakość + PF/RF + setupy - DD * 1.25. Setupy: TP1-only = 1 transakcja, TP1+TP2 = 2 transakcje.",
+    rank: "Miejsce w aktualnie posortowanej tabeli",
     monthsTested: "Liczba przetestowanych miesięcy",
     profitableMonths: "Liczba miesięcy z dodatnim wynikiem",
     totalProfit: "Suma profitów z miesięcy",
@@ -1262,36 +1332,67 @@ function emptyRow(colspan) {
 }
 
 function attachSortHandlers() {
-  document.querySelectorAll("[data-sort-key]").forEach((button) => {
+  document.querySelectorAll("[data-sort-key][data-sort-direction]").forEach((button) => {
     if (button.dataset.sortAttached === "true") return;
     button.dataset.sortAttached = "true";
     button.addEventListener("click", () => {
       const type = button.dataset.sortType;
       const key = button.dataset.sortKey;
+      const direction = button.dataset.sortDirection;
       const targetSort = type === "set" ? state.setSort : state.passSort;
-      if (targetSort.key === key) {
-        targetSort.direction = targetSort.direction === "asc" ? "desc" : "asc";
-      } else {
-        targetSort.key = key;
-        targetSort.direction = state.data.columns.parameters.includes(key) ? "asc" : "desc";
-      }
+      updateSort(targetSort, key, direction);
+      applyFilters();
+      render();
+    });
+  });
+  document.querySelectorAll("[data-sort-clear]").forEach((button) => {
+    if (button.dataset.sortAttached === "true") return;
+    button.dataset.sortAttached = "true";
+    button.addEventListener("click", () => {
+      resetSort(button.dataset.sortClear);
       applyFilters();
       render();
     });
   });
 }
 
-function sortRows(rows, sort) {
-  rows.sort((a, b) => {
-    const av = getSortValue(a, sort.key);
-    const bv = getSortValue(b, sort.key);
-    let result;
-    if (typeof av === "number" && typeof bv === "number") {
-      result = av - bv;
-    } else {
-      result = String(av).localeCompare(String(bv), "pl");
+function updateSort(sort, key, direction) {
+  const index = sort.findIndex((item) => item.key === key);
+  if (index >= 0) {
+    if (sort[index].direction === direction && sort.length > 1) {
+      sort.splice(index, 1);
+      return;
     }
-    return sort.direction === "asc" ? result : -result;
+    sort[index].direction = direction;
+    return;
+  }
+
+  sort.push({ key, direction });
+}
+
+function resetSort(type) {
+  if (type === "set") {
+    state.setSort.splice(0, state.setSort.length, { key: "totalProfit", direction: "desc" });
+    return;
+  }
+  state.passSort.splice(0, state.passSort.length, { key: "Profit", direction: "desc" });
+}
+
+function sortRows(rows, sort) {
+  const sorters = Array.isArray(sort) ? sort : [sort];
+  rows.sort((a, b) => {
+    for (const sorter of sorters) {
+      const av = getSortValue(a, sorter.key);
+      const bv = getSortValue(b, sorter.key);
+      let result;
+      if (typeof av === "number" && typeof bv === "number") {
+        result = av - bv;
+      } else {
+        result = String(av).localeCompare(String(bv), "pl");
+      }
+      if (result !== 0) return sorter.direction === "asc" ? result : -result;
+    }
+    return 0;
   });
 }
 
@@ -1412,7 +1513,7 @@ function openResultDetail(type, key) {
   const pass = type === "pass" ? state.data.passes.find((row) => row._id === key) : null;
   const setItem =
     type === "set"
-      ? state.filteredSets.find((item) => String(item.rank) === String(key))
+      ? state.filteredSets.find((item) => item.paramKey === key)
       : state.filteredSets.find((item) => item.paramKey === pass?._paramKey) ||
         state.data.parameterSets.find((item) => item.paramKey === pass?._paramKey);
 
@@ -1421,7 +1522,7 @@ function openResultDetail(type, key) {
   el.detailEyebrow.textContent = type === "pass" ? "Pass optymalizatora" : "Zestaw parametrów";
   el.detailTitle.textContent = type === "pass"
     ? `Pass ${valueLabel(pass.Pass)} · ${valueLabel(pass._month)}`
-    : `Zestaw #${formatInteger(setItem.rank)}`;
+    : `Zestaw #${formatInteger(state.filteredSets.findIndex((item) => item.paramKey === setItem.paramKey) + 1)}`;
 
   el.resultDetail.innerHTML = `
     ${pass ? renderPassDetail(pass) : ""}
@@ -1480,22 +1581,24 @@ function renderPassDetail(pass) {
 
 function renderSetDetail(setItem) {
   const metrics = [
-    ["Ocena", formatNumber(setItem.robustnessScore, 1), "score-cell"],
-    ["Miesiące", `${formatInteger(setItem.profitableMonths)} / ${formatInteger(setItem.monthsTested)}`, ""],
     ["Suma profit", formatMoney(setItem.totalProfit), metricClass(setItem.totalProfit)],
+    ["Miesiące z profitem", `${formatInteger(setItem.profitableMonths)} / ${formatInteger(setItem.monthsTested)}`, ""],
     ["Mediana", formatMoney(setItem.medianMonthlyProfit), metricClass(setItem.medianMonthlyProfit)],
     ["Najgorszy mies.", formatMoney(setItem.worstMonthProfit), metricClass(setItem.worstMonthProfit)],
     ["DD max", `${formatNumber(setItem.maxEquityDdPct, 2)}%`, ""],
     ["Śr. PF", formatNumber(setItem.avgProfitFactor, 3), ""],
     ["Min PF", formatNumber(setItem.minProfitFactor, 3), ""],
     ["Śr. RF", formatNumber(setItem.avgRecoveryFactor, 3), ""],
-    ["Top pass", valueLabel(setItem.topPass), ""],
   ];
 
   return `
     <section class="detail-section">
-      <h3>Stabilność zestawu</h3>
+      <h3>Wynik zestawu</h3>
       ${renderDetailCards(metrics)}
+    </section>
+    <section class="detail-section">
+      <h3>Czasy</h3>
+      ${renderDetailCards(timeDetailCards(setItem.params))}
     </section>
     <section class="detail-section">
       <h3>Parametry</h3>
@@ -1505,7 +1608,7 @@ function renderSetDetail(setItem) {
             const value = formatTableParameterValue(setItem.params[name], name, setItem.params);
             return `
               <div class="detail-param">
-                <span>${escapeHtml(shortSettingName(name))}</span>
+                <span class="label-lines">${labelLinesHtml(fullSettingName(name))}</span>
                 <strong>${escapeHtml(value)}</strong>
               </div>
             `;
@@ -1525,7 +1628,6 @@ function renderSetDetail(setItem) {
               <th>RF</th>
               <th>DD%</th>
               <th>Trans.</th>
-              <th>Pass</th>
             </tr>
           </thead>
           <tbody>
@@ -1546,9 +1648,30 @@ function renderMonthlyDetailRow(item) {
       <td>${formatNumber(item.avgRecoveryFactor, 3)}</td>
       <td>${formatNumber(item.maxEquityDdPct, 2)}</td>
       <td>${formatInteger(item.avgTrades)}</td>
-      <td>${escapeHtml(valueLabel(item.topPass))}</td>
     </tr>
   `;
+}
+
+function timeDetailCards(params) {
+  const startHour = params.GodzinaStartuZakresu;
+  const startMinute = params.MinutaStartuZakresu;
+  const endHour = params.GodzinaKoncaZakresu;
+  const endMinute = params.MinutaKoncaZakresu;
+  const localRange = `${formatClock(startHour, startMinute)} - ${formatClock(endHour, endMinute)}`;
+  return [
+    ["Czas lokalny strategii", localRange, ""],
+    ["Strefa przeglądarki", browserTimeZoneLabel(), ""],
+    ["Quo Markets", `${formatClock(startHour, startMinute, 1)} - ${formatClock(endHour, endMinute, 1)}`, ""],
+    ["VEO Markets", `${formatClock(startHour, startMinute, -2)} - ${formatClock(endHour, endMinute, -2)}`, ""],
+  ];
+}
+
+function browserTimeZoneLabel() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "nie wykryto";
+  } catch (error) {
+    return "nie wykryto";
+  }
 }
 
 function renderDetailCards(items) {
@@ -1558,7 +1681,7 @@ function renderDetailCards(items) {
         .map(
           ([label, value, className]) => `
             <div class="detail-card ${escapeHtml(className || "")}">
-              <span>${escapeHtml(label)}</span>
+              <span class="label-lines">${labelLinesHtml(label)}</span>
               <strong>${escapeHtml(value)}</strong>
             </div>
           `,
@@ -1566,6 +1689,16 @@ function renderDetailCards(items) {
         .join("")}
     </div>
   `;
+}
+
+function labelLinesHtml(label) {
+  const parts = String(label).trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return `<span>${escapeHtml(parts[0] || label)}</span>`;
+  if (parts.length === 2) return parts.map((part) => `<span>${escapeHtml(part)}</span>`).join("");
+  const splitAt = Math.ceil(parts.length / 2);
+  return [parts.slice(0, splitAt).join(" "), parts.slice(splitAt).join(" ")]
+    .map((part) => `<span>${escapeHtml(part)}</span>`)
+    .join("");
 }
 
 function renderTabs() {

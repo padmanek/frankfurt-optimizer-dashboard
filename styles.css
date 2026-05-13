@@ -117,6 +117,12 @@ h2 {
   font-weight: 750;
 }
 
+.button.tiny {
+  min-height: 28px;
+  padding: 0 9px;
+  font-size: 0.74rem;
+}
+
 .button.primary {
   border-color: var(--accent);
   background: var(--accent);
@@ -692,40 +698,75 @@ th {
   text-transform: uppercase;
 }
 
-th button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-width: 0;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-transform: inherit;
-  line-height: 1.02;
-  text-align: center;
-}
-
-th.text button {
-  align-items: flex-start;
-  text-align: left;
-}
-
 .th-label {
   display: inline-flex;
   min-width: 0;
   flex-direction: column;
 }
 
-.sort-marker {
+.th-content {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+th.sorted-column {
+  background: #e8f3f0;
   color: var(--accent-strong);
-  font-size: 0.98rem;
+}
+
+.sort-controls {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.sort-control {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 18px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sort-control:hover,
+.sort-control.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.sort-marker {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.62rem;
   font-weight: 950;
   line-height: 1;
-  transform: translateY(-1px);
+}
+
+.sort-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
 }
 
 tbody tr:hover {
@@ -940,6 +981,15 @@ tbody tr:hover {
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.detail-card .label-lines,
+.detail-param .label-lines {
+  white-space: normal;
+}
+
+.label-lines span {
+  display: block;
 }
 
 .detail-card strong,

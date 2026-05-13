@@ -36,6 +36,49 @@ body.modal-open {
   overflow: hidden;
 }
 
+body.dashboard-busy {
+  cursor: progress;
+}
+
+body.dashboard-busy::before {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  z-index: 80;
+  min-height: 34px;
+  border: 1px solid rgba(31, 122, 104, 0.24);
+  border-radius: 999px;
+  padding: 8px 14px 8px 38px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow);
+  color: var(--accent-strong);
+  content: "Przeliczam wyniki...";
+  font-size: 0.82rem;
+  font-weight: 850;
+  transform: translateX(-50%);
+}
+
+body.dashboard-busy::after {
+  position: fixed;
+  top: 27px;
+  left: calc(50% - 85px);
+  z-index: 81;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(31, 122, 104, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 999px;
+  content: "";
+  transform: translateX(-50%);
+  animation: dashboard-spin 0.8s linear infinite;
+}
+
+@keyframes dashboard-spin {
+  to {
+    transform: translateX(-50%) rotate(360deg);
+  }
+}
+
 button,
 input,
 select {

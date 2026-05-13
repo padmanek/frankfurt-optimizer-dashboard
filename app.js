@@ -13,6 +13,7 @@ const state = {
   activeView: "overview",
   passSort: [{ key: "Profit", direction: "desc" }],
   setSort: [{ key: "totalProfit", direction: "desc" }],
+  updateTimer: null,
 };
 
 const el = {
@@ -128,8 +129,7 @@ async function loadDashboardData() {
 
 function setupControls() {
   const rerender = () => {
-    applyFilters();
-    render();
+    scheduleDashboardUpdate();
   };
 
   [el.minProfitFilter, el.maxDdFilter, el.minPfFilter, el.minRfFilter, el.minTradesFilter].forEach((input) =>
@@ -246,8 +246,7 @@ function populateStaticControls() {
   el.monthFilter.querySelectorAll("[data-month-filter]").forEach((input) => {
     input.addEventListener("change", () => {
       updateMonthFilterLabel();
-      applyFilters();
-      render();
+      scheduleDashboardUpdate();
     });
   });
   el.parameterFilterGrid.querySelectorAll(".checkbox-menu").forEach((menu) => {
@@ -260,8 +259,7 @@ function populateStaticControls() {
     input.addEventListener("change", () => {
       syncDependentParameterFilters();
       updateParameterFilterLabels();
-      applyFilters();
-      render();
+      scheduleDashboardUpdate();
     });
   });
   document.addEventListener("click", () => {
@@ -277,6 +275,24 @@ function populateStaticControls() {
   updateMonthFilterLabel();
   syncDependentParameterFilters();
   updateParameterFilterLabels();
+}
+
+function scheduleDashboardUpdate() {
+  if (state.updateTimer !== null) {
+    window.clearTimeout(state.updateTimer);
+  }
+  setDashboardBusy(true);
+  state.updateTimer = window.setTimeout(() => {
+    state.updateTimer = null;
+    applyFilters();
+    render();
+    window.requestAnimationFrame(() => setDashboardBusy(false));
+  }, 35);
+}
+
+function setDashboardBusy(isBusy) {
+  document.body.classList.toggle("dashboard-busy", isBusy);
+  document.body.setAttribute("aria-busy", isBusy ? "true" : "false");
 }
 
 function uniqueParameterValues(name) {
@@ -1358,8 +1374,7 @@ function attachSortHandlers() {
       const direction = button.dataset.sortDirection;
       const targetSort = type === "set" ? state.setSort : state.passSort;
       updateSort(targetSort, key, direction);
-      applyFilters();
-      render();
+      scheduleDashboardUpdate();
     });
   });
   document.querySelectorAll("[data-sort-clear]").forEach((button) => {
@@ -1367,8 +1382,7 @@ function attachSortHandlers() {
     button.dataset.sortAttached = "true";
     button.addEventListener("click", () => {
       resetSort(button.dataset.sortClear);
-      applyFilters();
-      render();
+      scheduleDashboardUpdate();
     });
   });
 }

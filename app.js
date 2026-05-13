@@ -920,13 +920,13 @@ function fullSettingName(name) {
 function tableSettingName(name) {
   const labels = {
     LotyTP2: "TP2",
-    OdstepWejsciaPipsy: "Odstęp od zakresu",
-    UzyjBreakEvenPoTP1: "Break even po TP1",
-    GodzinaStartuZakresu: "Godzina startu",
-    MinutaStartuZakresu: "Minuta startu",
-    GodzinaKoncaZakresu: "Godzina końca",
-    MinutaKoncaZakresu: "Minuta końca",
-    UsunPrzeciwneZleceniePoAktywacji: "Usuń przeciwne zlecenie",
+    OdstepWejsciaPipsy: "Odstęp",
+    UzyjBreakEvenPoTP1: "BE TP1",
+    GodzinaStartuZakresu: "Start h",
+    MinutaStartuZakresu: "Start min",
+    GodzinaKoncaZakresu: "Koniec h",
+    MinutaKoncaZakresu: "Koniec min",
+    UsunPrzeciwneZleceniePoAktywacji: "Usuń przeciwne",
   };
   return labels[name] || shortSettingName(name);
 }
@@ -1127,16 +1127,16 @@ function renderSetsTable() {
 function buildSetsTable(rows, options) {
   const metricColumns = [
     ["rank", "Ranking"],
-    ["monthsTested", "Liczba miesięcy"],
-    ["profitableMonths", "Miesiące z profitem"],
-    ["totalProfit", "Profit razem"],
+    ["monthsTested", "Mies."],
+    ["profitableMonths", "Profit mies."],
+    ["totalProfit", "Suma netto"],
     ["medianMonthlyProfit", "Mediana"],
     ["worstMonthProfit", "Najgorszy"],
-    ["avgProfitFactor", "Średni Profit Factor"],
-    ["minProfitFactor", "Najniższy Profit Factor"],
-    ["avgRecoveryFactor", "Średni Recovery Factor"],
-    ["maxEquityDdPct", "Drawdown procentowy"],
-    ["avgTrades", "Transakcje"],
+    ["avgProfitFactor", "Śr. PF"],
+    ["minProfitFactor", "Min PF"],
+    ["avgRecoveryFactor", "Śr. RF"],
+    ["maxEquityDdPct", "DD%"],
+    ["avgTrades", "Trans."],
   ];
   const parameterColumns = state.data.columns.parameters.map((column) => [
     column,
@@ -1200,15 +1200,15 @@ function formatSetCell(key, value, context = null) {
 
 function renderPassesTable() {
   const columns = [
-    ["Pass", "Numer testu"],
-    ["_month", "Miesiąc"],
+    ["Pass", "Nr"],
+    ["_month", "Mies."],
     ["Profit", "Profit netto"],
     ["Result", "Saldo"],
-    ["Profit Factor", "Profit Factor"],
-    ["Recovery Factor", "Recovery Factor"],
-    ["Sharpe Ratio", "Sharpe Ratio"],
-    ["Equity DD %", "Drawdown procentowy"],
-    ["Trades", "Transakcje"],
+    ["Profit Factor", "PF"],
+    ["Recovery Factor", "RF"],
+    ["Sharpe Ratio", "Sharpe"],
+    ["Equity DD %", "DD%"],
+    ["Trades", "Trans."],
     ...state.data.columns.parameters.map((column) => [column, tableSettingName(column)]),
   ];
 

@@ -693,9 +693,6 @@ function renderHeader() {
   const overall = state.data.overall;
   const reportWord = overall.reportCount === 1 ? "raport" : "raporty";
   const monthsWord = overall.monthCount === 1 ? "miesiąc" : "miesiące";
-  const normalizationNote = state.data.riskNormalization?.enabled
-    ? ", TP1-only przeliczone do 100 USD ryzyka"
-    : "";
   const commissionNote = state.data.commissionNormalization?.enabled
     ? ", wyniki netto po prowizji"
     : "";
@@ -704,7 +701,6 @@ function renderHeader() {
     `${formatInteger(overall.monthCount)} ${monthsWord}, ` +
     `${formatInteger(overall.rowCount)} wyników testów, ` +
     `wygenerowano ${new Date(state.data.generatedAt).toLocaleString("pl-PL")}` +
-    normalizationNote +
     commissionNote;
 }
 
@@ -936,11 +932,11 @@ function parameterDescription(name) {
     UzyjRyzykaKwotowego:
       "Włącza automatyczne liczenie wielkości pozycji z podanej kwoty ryzyka zamiast ręcznego lota.",
     RyzykoKwotoweNaZlecenie:
-      "Kwota ryzyka na jedną część zlecenia. Przy TP1 + TP2 są dwie części po 50 USD, a wariant tylko TP1 w dashboardzie jest szacowany jako jedno zlecenie 100 USD.",
+      "Kwota ryzyka na jedną część zlecenia. Przy TP1 + TP2 są dwie części po 50 USD, a przy samym TP1 gramy jedno zlecenie.",
     LotyTP1:
       "Pierwsza część wejścia z bliższym take profitem. W trybie ryzyka kwotowego wartość większa od zera oznacza, że ta część jest włączona.",
     LotyTP2:
-      "Druga część wejścia z dalszym take profitem. Gdy TP2 jest nieaktywne, dashboard szacuje wynik TP1 tak, jakby jedna transakcja ryzykowała 100 USD.",
+      "Druga część wejścia z dalszym take profitem. Gdy TP2 jest nieaktywne, gramy tylko część TP1.",
     WartoscPipsa:
       "Przelicznik pipsów na cenę instrumentu. Dla testowanego złota ustawiono 0.1.",
     OdstepWejsciaPipsy:
@@ -1424,7 +1420,7 @@ function headerTooltip(key, label) {
     avgTrades: "Liczba transakcji. W zestawach jest to średnia liczba transakcji z przetestowanych miesięcy.",
     Pass: "Numer wyniku z optymalizatora MetaTrader",
     _month: "Miesiąc testu",
-    Profit: "Profit netto po estymowanej prowizji. Dla TP2 = nie jest to estymacja x2 do 100 USD ryzyka na setup.",
+    Profit: "Profit netto po prowizji.",
     Result: "Końcowy stan konta po normalizacji ryzyka i prowizji",
     "Profit Factor":
       "Profit Factor. To stosunek zysków brutto do strat brutto. Wartość powyżej 1 oznacza przewagę zysków nad stratami.",
@@ -1433,7 +1429,7 @@ function headerTooltip(key, label) {
     "Sharpe Ratio":
       "Sharpe Ratio. Mierzy jakość wyniku względem zmienności wyników. Wyżej zwykle oznacza równiejszy przebieg zysków.",
     "Equity DD %":
-      "Drawdown procentowy kapitału. Pokazuje największe obsunięcie equity w procentach; im niżej, tym spokojniejszy wynik. Dla TP2 = nie jest estymowany x2.",
+      "Drawdown procentowy kapitału. Pokazuje największe obsunięcie equity w procentach; im niżej, tym spokojniejszy wynik.",
     Trades: "Liczba transakcji",
   };
 
@@ -1699,53 +1695,11 @@ function renderPassDetail(pass) {
     ["Sharpe Ratio", formatNumber(pass["Sharpe Ratio"], 3), ""],
     ["Raport", valueLabel(pass._sourceFile), "wide"],
   ];
-  const rawMetrics = pass._riskAdjusted
-    ? [
-        ["Mnożnik", `x${formatNumber(pass._riskMultiplier, 0)}`, ""],
-        ["Profit surowy", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
-        ["Saldo surowe", formatMoney(pass._rawResult), ""],
-        ["Drawdown surowy", `${formatNumber(pass._rawEquityDdPct, 2)}%`, ""],
-      ]
-    : [];
-  const commissionMetrics = pass._commissionAdjusted
-    ? [
-        ["Profit z raportu", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
-        ["Prowizja szacowana", `-${formatMoney(pass._estimatedCommission)}`, "negative"],
-        ["Profit netto", formatMoney(pass.Profit), metricClass(pass.Profit)],
-      ]
-    : [];
-
   return `
     <section class="detail-section">
       <h3>Wynik testu</h3>
       ${renderDetailCards(metrics)}
     </section>
-    ${
-      pass._commissionAdjusted
-        ? `<section class="detail-section">
-            <h3>Prowizja</h3>
-            <p class="detail-note">
-              Raport optymalizatora nie ma osobnej kolumny prowizji. Dashboard odejmuje estymowane
-              0,60 USD za transakcję dla wariantów z raportów MetaTrader 5.
-            </p>
-            ${renderDetailCards(commissionMetrics)}
-          </section>`
-        : ""
-    }
-    ${
-      pass._riskAdjusted
-        ? `<section class="detail-section">
-            <h3>Estymacja ryzyka</h3>
-            <p class="detail-note">
-              Ten wynik ma TP2 = nie. Oryginalny test ryzykował 50 USD na jedno zlecenie TP1, a dashboard
-              pokazuje estymację dla 100 USD ryzyka na setup. Profit, saldo, expected payoff,
-              drawdown procentowy i prowizja są przeliczone x2. Profit Factor, Recovery Factor,
-              Sharpe Ratio i liczba transakcji zostają z raportu.
-            </p>
-            ${renderDetailCards(rawMetrics)}
-          </section>`
-        : ""
-    }
   `;
 }
 

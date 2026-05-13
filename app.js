@@ -603,12 +603,16 @@ function renderHeader() {
   const normalizationNote = state.data.riskNormalization?.enabled
     ? ", TP1-only przeliczone do 100 USD ryzyka"
     : "";
+  const commissionNote = state.data.commissionNormalization?.enabled
+    ? ", wyniki netto po prowizji"
+    : "";
   el.dataSummary.textContent =
     `${formatInteger(overall.reportCount)} ${reportWord}, ` +
     `${formatInteger(overall.monthCount)} ${monthsWord}, ` +
     `${formatInteger(overall.rowCount)} passów, ` +
     `wygenerowano ${new Date(state.data.generatedAt).toLocaleString("pl-PL")}` +
-    normalizationNote;
+    normalizationNote +
+    commissionNote;
 }
 
 function renderParameterGuide() {
@@ -1032,7 +1036,7 @@ function buildSetsTable(rows, options) {
     ["rank", "Ranking"],
     ["monthsTested", "Mies."],
     ["profitableMonths", "Profit mies."],
-    ["totalProfit", "Suma profit"],
+    ["totalProfit", "Suma netto"],
     ["medianMonthlyProfit", "Mediana"],
     ["worstMonthProfit", "Najgorszy"],
     ["avgProfitFactor", "Śr. PF"],
@@ -1105,7 +1109,7 @@ function renderPassesTable() {
   const columns = [
     ["Pass", "Pass"],
     ["_month", "Mies."],
-    ["Profit", "Profit"],
+    ["Profit", "Profit netto"],
     ["Result", "Saldo"],
     ["Profit Factor", "PF"],
     ["Recovery Factor", "RF"],
@@ -1173,7 +1177,7 @@ function sortLabel(key) {
     rank: "Ranking",
     monthsTested: "Miesiące",
     profitableMonths: "Profit mies.",
-    totalProfit: "Suma profit",
+    totalProfit: "Suma netto",
     medianMonthlyProfit: "Mediana",
     worstMonthProfit: "Najgorszy",
     avgProfitFactor: "Śr. PF",
@@ -1183,7 +1187,7 @@ function sortLabel(key) {
     avgTrades: "Transakcje",
     Pass: "Pass",
     _month: "Miesiąc",
-    Profit: "Profit",
+    Profit: "Profit netto",
     Result: "Saldo",
     "Profit Factor": "PF",
     "Recovery Factor": "RF",
@@ -1299,7 +1303,7 @@ function headerTooltip(key, label) {
     rank: "Miejsce w aktualnie posortowanej tabeli",
     monthsTested: "Liczba przetestowanych miesięcy",
     profitableMonths: "Liczba miesięcy z dodatnim wynikiem",
-    totalProfit: "Suma profitów z miesięcy",
+    totalProfit: "Suma profitów netto z miesięcy po prowizji",
     medianMonthlyProfit: "Mediana miesięcznego profitu",
     worstMonthProfit: "Najgorszy miesięczny profit",
     avgProfitFactor: "Średni Profit Factor",
@@ -1309,8 +1313,8 @@ function headerTooltip(key, label) {
     avgTrades: "Liczba transakcji",
     Pass: "Numer passu z optymalizatora MetaTrader",
     _month: "Miesiąc testu",
-    Profit: "Profit po normalizacji ryzyka. Dla TP2 = nie jest to estymacja x2 do 100 USD ryzyka na setup.",
-    Result: "Końcowy stan konta po normalizacji ryzyka",
+    Profit: "Profit netto po estymowanej prowizji. Dla TP2 = nie jest to estymacja x2 do 100 USD ryzyka na setup.",
+    Result: "Końcowy stan konta po normalizacji ryzyka i prowizji",
     "Profit Factor": "Profit Factor",
     "Recovery Factor": "Recovery Factor",
     "Sharpe Ratio": "Sharpe Ratio",
@@ -1590,6 +1594,13 @@ function renderPassDetail(pass) {
         ["DD surowe", `${formatNumber(pass._rawEquityDdPct, 2)}%`, ""],
       ]
     : [];
+  const commissionMetrics = pass._commissionAdjusted
+    ? [
+        ["Profit z XML", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
+        ["Prowizja est.", `-${formatMoney(pass._estimatedCommission)}`, "negative"],
+        ["Profit netto", formatMoney(pass.Profit), metricClass(pass.Profit)],
+      ]
+    : [];
 
   return `
     <section class="detail-section">
@@ -1597,13 +1608,25 @@ function renderPassDetail(pass) {
       ${renderDetailCards(metrics)}
     </section>
     ${
+      pass._commissionAdjusted
+        ? `<section class="detail-section">
+            <h3>Prowizja</h3>
+            <p class="detail-note">
+              XML optymalizatora nie ma osobnej kolumny prowizji. Dashboard odejmuje estymowane
+              0,60 USD za transakcję dla wariantów z raportów MT5.
+            </p>
+            ${renderDetailCards(commissionMetrics)}
+          </section>`
+        : ""
+    }
+    ${
       pass._riskAdjusted
         ? `<section class="detail-section">
             <h3>Estymacja ryzyka</h3>
             <p class="detail-note">
               Ten pass ma TP2 = nie. Oryginalny test ryzykował 50 USD na jedno zlecenie TP1, a dashboard
-              pokazuje estymację dla 100 USD ryzyka na setup: profit, saldo, payoff i DD% są przeliczone x2.
-              PF, RF, Sharpe i liczba transakcji zostają z raportu.
+              pokazuje estymację dla 100 USD ryzyka na setup. Profit, saldo, payoff, DD% i prowizja są
+              przeliczone x2. PF, RF, Sharpe i liczba transakcji zostają z raportu.
             </p>
             ${renderDetailCards(rawMetrics)}
           </section>`

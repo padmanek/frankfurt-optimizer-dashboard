@@ -1044,11 +1044,10 @@ tbody tr:hover {
 .detail-param strong {
   display: block;
   margin-top: 4px;
-  overflow: hidden;
   color: var(--text);
   font-size: 1rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .detail-card.positive strong,

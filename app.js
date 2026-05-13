@@ -1747,15 +1747,11 @@ function timeDetailCards(params) {
   const endMinute = params.MinutaKoncaZakresu;
   const localRange = `${formatClock(startHour, startMinute)} - ${formatClock(endHour, endMinute)}`;
   return [
-    ["Czas lokalny strategii", `${localRange} (${localUtcLabel()})`, ""],
+    ["Czas lokalny strategii UTC+1 / UTC+2", localRange, ""],
     ["Strefa przeglądarki", browserTimeZoneLabel(), ""],
-    ["Quo Markets", `${formatClock(startHour, startMinute, 1)} - ${formatClock(endHour, endMinute, 1)} (UTC+3)`, ""],
-    ["VEO Markets", `${formatClock(startHour, startMinute, -2)} - ${formatClock(endHour, endMinute, -2)} (UTC+0)`, ""],
+    ["Quo Markets UTC+3", `${formatClock(startHour, startMinute, 1)} - ${formatClock(endHour, endMinute, 1)}`, ""],
+    ["VEO Markets UTC+0", `${formatClock(startHour, startMinute, -2)} - ${formatClock(endHour, endMinute, -2)}`, ""],
   ];
-}
-
-function localUtcLabel() {
-  return "UTC+1 zimą / UTC+2 latem";
 }
 
 function browserTimeZoneLabel() {

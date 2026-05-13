@@ -72,7 +72,7 @@ function formatPercent(value, digits = 1) {
 }
 
 function formatMoney(value) {
-  return formatInteger(value);
+  return formatNumber(value, 1);
 }
 
 function valueLabel(value) {

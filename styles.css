@@ -724,15 +724,17 @@ th.sorted-column {
 .sort-control {
   display: inline-grid;
   place-items: center;
-  width: 20px;
-  height: 18px;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 4px;
   border: 1px solid var(--line);
   border-radius: 5px;
   background: #fff;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.62rem;
   font-weight: 900;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .sort-control:hover,
@@ -740,20 +742,6 @@ th.sorted-column {
   border-color: var(--accent);
   background: var(--accent);
   color: #fff;
-}
-
-.sort-marker {
-  display: inline-grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  margin-top: 1px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 950;
-  line-height: 1;
 }
 
 .sort-toolbar {

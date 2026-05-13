@@ -1155,14 +1155,14 @@ function renderPassesTable() {
 
 function buildSortToolbar(type) {
   const sort = type === "set" ? state.setSort : state.passSort;
-  const labels = sort.map((item, index) => {
+  const labels = sort.map((item) => {
     const label = sortLabel(item.key);
-    const direction = item.direction === "asc" ? "rosnąco" : "malejąco";
-    return `${index + 1}. ${label} ${direction}`;
+    const direction = item.direction === "asc" ? "min" : "max";
+    return `${label}: ${direction}`;
   });
   return `
     <div class="sort-toolbar">
-      <span>Sortowanie: ${escapeHtml(labels.join(" · "))}</span>
+      <span>Sortowanie: ${escapeHtml(labels.join(" → "))}</span>
       <button class="button tiny secondary" type="button" data-sort-clear="${type}">Domyślne sortowanie</button>
     </div>
   `;
@@ -1209,13 +1209,12 @@ function sortableHeader(label, key, type) {
   const sort = type === "set" ? state.setSort : state.passSort;
   const sortIndex = sort.findIndex((item) => item.key === key);
   const sortItem = sortIndex >= 0 ? sort[sortIndex] : null;
-  const marker = sortItem ? String(sortIndex + 1) : "";
   const tooltip = headerTooltip(key, label);
-  const sortHint = "Użyj strzałek: w górę sortuje od najmniejszej wartości, w dół od największej. Kolejne kolumny dodają następny warunek sortowania.";
+  const sortHint = "Użyj min albo max. Kolejne kolumny dodają następny warunek sortowania.";
   return `
     <th class="${columnClass(key)} ${sortItem ? "sorted-column" : ""}" title="${escapeHtml(tooltip)}">
       <div class="th-content">
-        ${headerLabelHtml(label, marker)}
+        ${headerLabelHtml(label)}
         <span class="sort-controls" aria-label="${escapeHtml(`${tooltip}. ${sortHint}`)}">
           <button
             type="button"
@@ -1224,7 +1223,7 @@ function sortableHeader(label, key, type) {
             data-sort-key="${escapeHtml(key)}"
             data-sort-direction="asc"
             title="${escapeHtml(`${tooltip}\nSortuj od najmniejszej wartości.`)}"
-          >↑</button>
+          >min</button>
           <button
             type="button"
             class="sort-control ${sortItem?.direction === "desc" ? "active" : ""}"
@@ -1232,21 +1231,20 @@ function sortableHeader(label, key, type) {
             data-sort-key="${escapeHtml(key)}"
             data-sort-direction="desc"
             title="${escapeHtml(`${tooltip}\nSortuj od największej wartości.`)}"
-          >↓</button>
+          >max</button>
         </span>
       </div>
     </th>
   `;
 }
 
-function headerLabelHtml(label, marker) {
+function headerLabelHtml(label) {
   const parts = String(label).trim().split(/\s+/).filter(Boolean);
   const lines =
     parts.length > 1
       ? parts.map((part) => `<span>${escapeHtml(part)}</span>`).join("")
       : `<span>${escapeHtml(parts[0] || label)}</span>`;
-  const markerHtml = marker ? `<span class="sort-marker">${escapeHtml(marker)}</span>` : "";
-  return `<span class="th-label">${lines}</span>${markerHtml}`;
+  return `<span class="th-label">${lines}</span>`;
 }
 
 function buildColGroup(columns, type) {

@@ -702,6 +702,13 @@ th {
   display: inline-flex;
   min-width: 0;
   flex-direction: column;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.th-label span {
+  display: block;
+  overflow-wrap: anywhere;
 }
 
 .th-content {
@@ -724,17 +731,16 @@ th.sorted-column {
 .sort-control {
   display: inline-grid;
   place-items: center;
-  min-width: 28px;
-  height: 20px;
+  min-width: 24px;
+  height: 22px;
   padding: 0 4px;
   border: 1px solid var(--line);
   border-radius: 5px;
   background: #fff;
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: 0.9rem;
   font-weight: 900;
   line-height: 1;
-  text-transform: uppercase;
 }
 
 .sort-control:hover,

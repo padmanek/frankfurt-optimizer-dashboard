@@ -609,7 +609,7 @@ function renderHeader() {
   el.dataSummary.textContent =
     `${formatInteger(overall.reportCount)} ${reportWord}, ` +
     `${formatInteger(overall.monthCount)} ${monthsWord}, ` +
-    `${formatInteger(overall.rowCount)} passów, ` +
+    `${formatInteger(overall.rowCount)} wyników testów, ` +
     `wygenerowano ${new Date(state.data.generatedAt).toLocaleString("pl-PL")}` +
     normalizationNote +
     commissionNote;
@@ -667,12 +667,12 @@ function renderKpis() {
   const bestSetProfit = state.filteredSets.length ? state.filteredSets[0].totalProfit : 0;
 
   const kpis = [
-    ["Passy", formatInteger(rows.length), "po filtrach"],
-    ["Profit dodatni", formatPercent(rows.length ? profitable / rows.length : 0), `${formatInteger(profitable)} passów`],
+    ["Wyniki testów", formatInteger(rows.length), "po filtrach"],
+    ["Profit dodatni", formatPercent(rows.length ? profitable / rows.length : 0), `${formatInteger(profitable)} wyników`],
     ["Mediana profitu", formatMoney(medianProfit), "typowy wynik testów"],
-    ["Max profit", formatMoney(maxProfit), "najlepszy pojedynczy pass"],
-    ["Mocne passy", formatInteger(quality), "PF/RF/DD/transakcje"],
-    ["Najlepszy zestaw", formatMoney(bestSetProfit), `średni DD ${formatNumber(avgDd, 2)}%`],
+    ["Największy profit", formatMoney(maxProfit), "najlepszy pojedynczy wynik"],
+    ["Mocne wyniki", formatInteger(quality), "Profit Factor, Recovery Factor, drawdown i transakcje"],
+    ["Najlepszy zestaw", formatMoney(bestSetProfit), `średni drawdown ${formatNumber(avgDd, 2)}%`],
   ];
 
   el.kpiGrid.innerHTML = kpis
@@ -705,7 +705,7 @@ function renderMonthSummary() {
           <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
           <small>
             mediana ${formatMoney(report.medianProfit)} · jakość ${formatInteger(report.qualityCount)} ·
-            DD max ${formatNumber(report.maxEquityDdPct, 2)}%
+            drawdown maksymalny ${formatNumber(report.maxEquityDdPct, 2)}%
           </small>
         </div>
       `;
@@ -827,13 +827,13 @@ function fullSettingName(name) {
 function tableSettingName(name) {
   const labels = {
     LotyTP2: "TP2",
-    OdstepWejsciaPipsy: "Odstęp",
-    UzyjBreakEvenPoTP1: "BE TP1",
-    GodzinaStartuZakresu: "Start h",
-    MinutaStartuZakresu: "Start min",
-    GodzinaKoncaZakresu: "Koniec h",
-    MinutaKoncaZakresu: "Koniec min",
-    UsunPrzeciwneZleceniePoAktywacji: "Usuń przeciwne",
+    OdstepWejsciaPipsy: "Odstęp od zakresu",
+    UzyjBreakEvenPoTP1: "Break even po TP1",
+    GodzinaStartuZakresu: "Godzina startu",
+    MinutaStartuZakresu: "Minuta startu",
+    GodzinaKoncaZakresu: "Godzina końca",
+    MinutaKoncaZakresu: "Minuta końca",
+    UsunPrzeciwneZleceniePoAktywacji: "Usuń przeciwne zlecenie",
   };
   return labels[name] || shortSettingName(name);
 }
@@ -968,7 +968,7 @@ function renderHistogram() {
   ctx.clearRect(0, 0, rect.width, 280);
 
   const values = state.filteredPasses.map((row) => number(row.Profit));
-  el.histogramLabel.textContent = `${formatInteger(values.length)} passów`;
+  el.histogramLabel.textContent = `${formatInteger(values.length)} wyników`;
 
   if (!values.length) {
     drawEmptyCanvas(ctx, rect.width, 280, "Brak danych po filtrach");
@@ -1034,16 +1034,16 @@ function renderSetsTable() {
 function buildSetsTable(rows, options) {
   const metricColumns = [
     ["rank", "Ranking"],
-    ["monthsTested", "Mies."],
-    ["profitableMonths", "Profit mies."],
-    ["totalProfit", "Suma netto"],
+    ["monthsTested", "Liczba miesięcy"],
+    ["profitableMonths", "Miesiące z profitem"],
+    ["totalProfit", "Profit razem"],
     ["medianMonthlyProfit", "Mediana"],
     ["worstMonthProfit", "Najgorszy"],
-    ["avgProfitFactor", "Śr. PF"],
-    ["minProfitFactor", "Min PF"],
-    ["avgRecoveryFactor", "Śr. RF"],
-    ["maxEquityDdPct", "DD%"],
-    ["avgTrades", "Trans."],
+    ["avgProfitFactor", "Średni Profit Factor"],
+    ["minProfitFactor", "Najniższy Profit Factor"],
+    ["avgRecoveryFactor", "Średni Recovery Factor"],
+    ["maxEquityDdPct", "Drawdown procentowy"],
+    ["avgTrades", "Transakcje"],
   ];
   const parameterColumns = state.data.columns.parameters.map((column) => [
     column,
@@ -1107,19 +1107,19 @@ function formatSetCell(key, value, context = null) {
 
 function renderPassesTable() {
   const columns = [
-    ["Pass", "Pass"],
-    ["_month", "Mies."],
+    ["Pass", "Numer testu"],
+    ["_month", "Miesiąc"],
     ["Profit", "Profit netto"],
     ["Result", "Saldo"],
-    ["Profit Factor", "PF"],
-    ["Recovery Factor", "RF"],
-    ["Sharpe Ratio", "Sharpe"],
-    ["Equity DD %", "DD%"],
-    ["Trades", "Trans."],
+    ["Profit Factor", "Profit Factor"],
+    ["Recovery Factor", "Recovery Factor"],
+    ["Sharpe Ratio", "Sharpe Ratio"],
+    ["Equity DD %", "Drawdown procentowy"],
+    ["Trades", "Transakcje"],
     ...state.data.columns.parameters.map((column) => [column, tableSettingName(column)]),
   ];
 
-  el.passesCountLabel.textContent = `${formatInteger(state.filteredPasses.length)} passów`;
+  el.passesCountLabel.textContent = `${formatInteger(state.filteredPasses.length)} wyników`;
   const rows = state.filteredPasses.slice(0, 700);
   const htmlRows = rows
     .map((row) => {
@@ -1161,7 +1161,7 @@ function buildSortToolbar(type) {
   const sort = type === "set" ? state.setSort : state.passSort;
   const labels = sort.map((item) => {
     const label = sortLabel(item.key);
-    const direction = item.direction === "asc" ? "min" : "max";
+    const direction = item.direction === "asc" ? "najmniej" : "najwięcej";
     return `${label}: ${direction}`;
   });
   return `
@@ -1176,23 +1176,23 @@ function sortLabel(key) {
   const labels = {
     rank: "Ranking",
     monthsTested: "Miesiące",
-    profitableMonths: "Profit mies.",
-    totalProfit: "Suma netto",
+    profitableMonths: "Miesiące z profitem",
+    totalProfit: "Profit razem",
     medianMonthlyProfit: "Mediana",
     worstMonthProfit: "Najgorszy",
-    avgProfitFactor: "Śr. PF",
-    minProfitFactor: "Min PF",
-    avgRecoveryFactor: "Śr. RF",
-    maxEquityDdPct: "DD%",
+    avgProfitFactor: "Średni Profit Factor",
+    minProfitFactor: "Najniższy Profit Factor",
+    avgRecoveryFactor: "Średni Recovery Factor",
+    maxEquityDdPct: "Drawdown procentowy",
     avgTrades: "Transakcje",
-    Pass: "Pass",
+    Pass: "Numer testu",
     _month: "Miesiąc",
     Profit: "Profit netto",
     Result: "Saldo",
-    "Profit Factor": "PF",
-    "Recovery Factor": "RF",
-    "Sharpe Ratio": "Sharpe",
-    "Equity DD %": "DD%",
+    "Profit Factor": "Profit Factor",
+    "Recovery Factor": "Recovery Factor",
+    "Sharpe Ratio": "Sharpe Ratio",
+    "Equity DD %": "Drawdown procentowy",
     Trades: "Transakcje",
   };
   return labels[key] || tableSettingName(key);
@@ -1214,7 +1214,7 @@ function sortableHeader(label, key, type) {
   const sortIndex = sort.findIndex((item) => item.key === key);
   const sortItem = sortIndex >= 0 ? sort[sortIndex] : null;
   const tooltip = headerTooltip(key, label);
-  const sortHint = "Użyj min albo max. Kolejne kolumny dodają następny warunek sortowania.";
+  const sortHint = "Użyj sortowania od najmniejszej albo od największej wartości. Kolejne kolumny dodają następny warunek sortowania.";
   return `
     <th class="${columnClass(key)} ${sortItem ? "sorted-column" : ""}" title="${escapeHtml(tooltip)}">
       <div class="th-content">
@@ -1227,7 +1227,7 @@ function sortableHeader(label, key, type) {
             data-sort-key="${escapeHtml(key)}"
             data-sort-direction="asc"
             title="${escapeHtml(`${tooltip}\nSortuj od najmniejszej wartości.`)}"
-          >min</button>
+          >↑</button>
           <button
             type="button"
             class="sort-control ${sortItem?.direction === "desc" ? "active" : ""}"
@@ -1235,7 +1235,7 @@ function sortableHeader(label, key, type) {
             data-sort-key="${escapeHtml(key)}"
             data-sort-direction="desc"
             title="${escapeHtml(`${tooltip}\nSortuj od największej wartości.`)}"
-          >max</button>
+          >↓</button>
         </span>
       </div>
     </th>
@@ -1311,7 +1311,7 @@ function headerTooltip(key, label) {
     avgRecoveryFactor: "Średni Recovery Factor",
     maxEquityDdPct: "Maksymalny procentowy drawdown kapitału",
     avgTrades: "Liczba transakcji",
-    Pass: "Numer passu z optymalizatora MetaTrader",
+    Pass: "Numer wyniku z optymalizatora MetaTrader",
     _month: "Miesiąc testu",
     Profit: "Profit netto po estymowanej prowizji. Dla TP2 = nie jest to estymacja x2 do 100 USD ryzyka na setup.",
     Result: "Końcowy stan konta po normalizacji ryzyka i prowizji",
@@ -1484,8 +1484,8 @@ function renderParameterBars() {
             <div class="bar-fill" style="width:${width}%; background:${color}"></div>
           </div>
           <div class="metric-meta">
-            śr. ${formatMoney(item.avgProfit)} · med. ${formatMoney(item.medianProfit)} ·
-            ${formatPercent(item.profitableRate)} · n=${formatInteger(item.count)}
+            średnia ${formatMoney(item.avgProfit)} · mediana ${formatMoney(item.medianProfit)} ·
+            zyskowne ${formatPercent(item.profitableRate)} · liczba ${formatInteger(item.count)}
           </div>
         </div>
       `;
@@ -1535,8 +1535,8 @@ function renderStartHeatmap() {
           return `
             <div class="heat-cell" style="background:${color}">
               <strong>${escapeHtml(item.time)}</strong>
-              <span>śr. ${formatMoney(item.avgProfit)}</span>
-              <span>max ${formatMoney(item.maxProfit)}</span>
+              <span>średnia ${formatMoney(item.avgProfit)}</span>
+              <span>najwięcej ${formatMoney(item.maxProfit)}</span>
               <span>jakość ${formatInteger(item.qualityCount)} / ${formatInteger(item.count)}</span>
             </div>
           `;
@@ -1556,9 +1556,9 @@ function openResultDetail(type, key) {
 
   if (!setItem && !pass) return;
 
-  el.detailEyebrow.textContent = type === "pass" ? "Pass optymalizatora" : "Zestaw parametrów";
+  el.detailEyebrow.textContent = type === "pass" ? "Wynik optymalizatora" : "Zestaw parametrów";
   el.detailTitle.textContent = type === "pass"
-    ? `Pass ${valueLabel(pass.Pass)} · ${valueLabel(pass._month)}`
+    ? `Wynik ${valueLabel(pass.Pass)} · ${valueLabel(pass._month)}`
     : `Zestaw #${formatInteger(state.filteredSets.findIndex((item) => item.paramKey === setItem.paramKey) + 1)}`;
 
   el.resultDetail.innerHTML = `
@@ -1579,11 +1579,11 @@ function renderPassDetail(pass) {
   const metrics = [
     ["Profit", formatMoney(pass.Profit), metricClass(pass.Profit)],
     ["Saldo", formatMoney(pass.Result), ""],
-    ["PF", formatNumber(pass["Profit Factor"], 3), ""],
-    ["RF", formatNumber(pass["Recovery Factor"], 3), ""],
-    ["DD%", formatNumber(pass["Equity DD %"], 2), ""],
+    ["Profit Factor", formatNumber(pass["Profit Factor"], 3), ""],
+    ["Recovery Factor", formatNumber(pass["Recovery Factor"], 3), ""],
+    ["Drawdown procentowy", formatNumber(pass["Equity DD %"], 2), ""],
     ["Transakcje", formatInteger(pass.Trades), ""],
-    ["Sharpe", formatNumber(pass["Sharpe Ratio"], 3), ""],
+    ["Sharpe Ratio", formatNumber(pass["Sharpe Ratio"], 3), ""],
     ["Raport", valueLabel(pass._sourceFile), "wide"],
   ];
   const rawMetrics = pass._riskAdjusted
@@ -1591,20 +1591,20 @@ function renderPassDetail(pass) {
         ["Mnożnik", `x${formatNumber(pass._riskMultiplier, 0)}`, ""],
         ["Profit surowy", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
         ["Saldo surowe", formatMoney(pass._rawResult), ""],
-        ["DD surowe", `${formatNumber(pass._rawEquityDdPct, 2)}%`, ""],
+        ["Drawdown surowy", `${formatNumber(pass._rawEquityDdPct, 2)}%`, ""],
       ]
     : [];
   const commissionMetrics = pass._commissionAdjusted
     ? [
-        ["Profit z XML", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
-        ["Prowizja est.", `-${formatMoney(pass._estimatedCommission)}`, "negative"],
+        ["Profit z raportu", formatMoney(pass._rawProfit), metricClass(pass._rawProfit)],
+        ["Prowizja szacowana", `-${formatMoney(pass._estimatedCommission)}`, "negative"],
         ["Profit netto", formatMoney(pass.Profit), metricClass(pass.Profit)],
       ]
     : [];
 
   return `
     <section class="detail-section">
-      <h3>Wynik passu</h3>
+      <h3>Wynik testu</h3>
       ${renderDetailCards(metrics)}
     </section>
     ${
@@ -1612,8 +1612,8 @@ function renderPassDetail(pass) {
         ? `<section class="detail-section">
             <h3>Prowizja</h3>
             <p class="detail-note">
-              XML optymalizatora nie ma osobnej kolumny prowizji. Dashboard odejmuje estymowane
-              0,60 USD za transakcję dla wariantów z raportów MT5.
+              Raport optymalizatora nie ma osobnej kolumny prowizji. Dashboard odejmuje estymowane
+              0,60 USD za transakcję dla wariantów z raportów MetaTrader 5.
             </p>
             ${renderDetailCards(commissionMetrics)}
           </section>`
@@ -1624,9 +1624,10 @@ function renderPassDetail(pass) {
         ? `<section class="detail-section">
             <h3>Estymacja ryzyka</h3>
             <p class="detail-note">
-              Ten pass ma TP2 = nie. Oryginalny test ryzykował 50 USD na jedno zlecenie TP1, a dashboard
-              pokazuje estymację dla 100 USD ryzyka na setup. Profit, saldo, payoff, DD% i prowizja są
-              przeliczone x2. PF, RF, Sharpe i liczba transakcji zostają z raportu.
+              Ten wynik ma TP2 = nie. Oryginalny test ryzykował 50 USD na jedno zlecenie TP1, a dashboard
+              pokazuje estymację dla 100 USD ryzyka na setup. Profit, saldo, expected payoff,
+              drawdown procentowy i prowizja są przeliczone x2. Profit Factor, Recovery Factor,
+              Sharpe Ratio i liczba transakcji zostają z raportu.
             </p>
             ${renderDetailCards(rawMetrics)}
           </section>`
@@ -1637,14 +1638,14 @@ function renderPassDetail(pass) {
 
 function renderSetDetail(setItem) {
   const metrics = [
-    ["Suma profit", formatMoney(setItem.totalProfit), metricClass(setItem.totalProfit)],
+    ["Profit razem", formatMoney(setItem.totalProfit), metricClass(setItem.totalProfit)],
     ["Miesiące z profitem", `${formatInteger(setItem.profitableMonths)} / ${formatInteger(setItem.monthsTested)}`, ""],
     ["Mediana", formatMoney(setItem.medianMonthlyProfit), metricClass(setItem.medianMonthlyProfit)],
-    ["Najgorszy mies.", formatMoney(setItem.worstMonthProfit), metricClass(setItem.worstMonthProfit)],
-    ["DD max", `${formatNumber(setItem.maxEquityDdPct, 2)}%`, ""],
-    ["Śr. PF", formatNumber(setItem.avgProfitFactor, 3), ""],
-    ["Min PF", formatNumber(setItem.minProfitFactor, 3), ""],
-    ["Śr. RF", formatNumber(setItem.avgRecoveryFactor, 3), ""],
+    ["Najgorszy miesiąc", formatMoney(setItem.worstMonthProfit), metricClass(setItem.worstMonthProfit)],
+    ["Drawdown maksymalny", `${formatNumber(setItem.maxEquityDdPct, 2)}%`, ""],
+    ["Średni Profit Factor", formatNumber(setItem.avgProfitFactor, 3), ""],
+    ["Najniższy Profit Factor", formatNumber(setItem.minProfitFactor, 3), ""],
+    ["Średni Recovery Factor", formatNumber(setItem.avgRecoveryFactor, 3), ""],
   ];
 
   return `
@@ -1680,10 +1681,10 @@ function renderSetDetail(setItem) {
             <tr>
               <th>Miesiąc</th>
               <th>Profit</th>
-              <th>PF</th>
-              <th>RF</th>
-              <th>DD%</th>
-              <th>Trans.</th>
+              <th>Profit Factor</th>
+              <th>Recovery Factor</th>
+              <th>Drawdown procentowy</th>
+              <th>Transakcje</th>
             </tr>
           </thead>
           <tbody>

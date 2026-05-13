@@ -1218,7 +1218,14 @@ function sortableHeader(label, key, type) {
   return `
     <th class="${columnClass(key)} ${sortItem ? "sorted-column" : ""}" title="${escapeHtml(tooltip)}">
       <div class="th-content">
-        ${headerLabelHtml(label)}
+        <span class="th-label-wrap">
+          ${headerLabelHtml(label)}
+          <span
+            class="header-help"
+            title="${escapeHtml(tooltip)}"
+            aria-label="${escapeHtml(tooltip)}"
+          >?</span>
+        </span>
         <span class="sort-controls" aria-label="${escapeHtml(`${tooltip}. ${sortHint}`)}">
           <button
             type="button"
@@ -1306,19 +1313,27 @@ function headerTooltip(key, label) {
     totalProfit: "Suma profitów netto z miesięcy po prowizji",
     medianMonthlyProfit: "Mediana miesięcznego profitu",
     worstMonthProfit: "Najgorszy miesięczny profit",
-    avgProfitFactor: "Średni Profit Factor",
-    minProfitFactor: "Minimalny Profit Factor",
-    avgRecoveryFactor: "Średni Recovery Factor",
-    maxEquityDdPct: "Maksymalny procentowy drawdown kapitału",
-    avgTrades: "Liczba transakcji",
+    avgProfitFactor:
+      "Średni Profit Factor. To stosunek zysków brutto do strat brutto liczony średnio z miesięcy. Powyżej 1 oznacza, że zyski są większe niż straty.",
+    minProfitFactor:
+      "Najniższy Profit Factor z miesięcy. Pokazuje, jak słaby był najsłabszy miesiąc pod względem relacji zysków do strat.",
+    avgRecoveryFactor:
+      "Średni Recovery Factor. Pokazuje, ile profit wynosi względem drawdownu. Im wyżej, tym lepiej wynik odrabia obsunięcia kapitału.",
+    maxEquityDdPct:
+      "Największy drawdown procentowy kapitału. Pokazuje największe obsunięcie konta w procentach; im niżej, tym spokojniejszy wynik.",
+    avgTrades: "Liczba transakcji. W zestawach jest to średnia liczba transakcji z przetestowanych miesięcy.",
     Pass: "Numer wyniku z optymalizatora MetaTrader",
     _month: "Miesiąc testu",
     Profit: "Profit netto po estymowanej prowizji. Dla TP2 = nie jest to estymacja x2 do 100 USD ryzyka na setup.",
     Result: "Końcowy stan konta po normalizacji ryzyka i prowizji",
-    "Profit Factor": "Profit Factor",
-    "Recovery Factor": "Recovery Factor",
-    "Sharpe Ratio": "Sharpe Ratio",
-    "Equity DD %": "Procentowy drawdown kapitału. Dla TP2 = nie jest estymowany x2.",
+    "Profit Factor":
+      "Profit Factor. To stosunek zysków brutto do strat brutto. Wartość powyżej 1 oznacza przewagę zysków nad stratami.",
+    "Recovery Factor":
+      "Recovery Factor. Pokazuje, ile profit wynosi względem drawdownu. Wyższa wartość oznacza lepszy zysk w relacji do obsunięcia kapitału.",
+    "Sharpe Ratio":
+      "Sharpe Ratio. Mierzy jakość wyniku względem zmienności wyników. Wyżej zwykle oznacza równiejszy przebieg zysków.",
+    "Equity DD %":
+      "Drawdown procentowy kapitału. Pokazuje największe obsunięcie equity w procentach; im niżej, tym spokojniejszy wynik. Dla TP2 = nie jest estymowany x2.",
     Trades: "Liczba transakcji",
   };
 
@@ -1679,12 +1694,12 @@ function renderSetDetail(setItem) {
         <table class="mini-table">
           <thead>
             <tr>
-              <th>Miesiąc</th>
-              <th>Profit</th>
-              <th>Profit Factor</th>
-              <th>Recovery Factor</th>
-              <th>Drawdown procentowy</th>
-              <th>Transakcje</th>
+              ${plainHeader("Miesiąc", "_month")}
+              ${plainHeader("Profit", "Profit")}
+              ${plainHeader("Profit Factor", "Profit Factor")}
+              ${plainHeader("Recovery Factor", "Recovery Factor")}
+              ${plainHeader("Drawdown procentowy", "Equity DD %")}
+              ${plainHeader("Transakcje", "Trades")}
             </tr>
           </thead>
           <tbody>
@@ -1693,6 +1708,22 @@ function renderSetDetail(setItem) {
         </table>
       </div>
     </section>
+  `;
+}
+
+function plainHeader(label, key) {
+  const tooltip = headerTooltip(key, label);
+  return `
+    <th title="${escapeHtml(tooltip)}">
+      <span class="th-label-wrap">
+        ${headerLabelHtml(label)}
+        <span
+          class="header-help"
+          title="${escapeHtml(tooltip)}"
+          aria-label="${escapeHtml(tooltip)}"
+        >?</span>
+      </span>
+    </th>
   `;
 }
 
@@ -1716,11 +1747,15 @@ function timeDetailCards(params) {
   const endMinute = params.MinutaKoncaZakresu;
   const localRange = `${formatClock(startHour, startMinute)} - ${formatClock(endHour, endMinute)}`;
   return [
-    ["Czas lokalny strategii", localRange, ""],
+    ["Czas lokalny strategii", `${localRange} (${localUtcLabel()})`, ""],
     ["Strefa przeglądarki", browserTimeZoneLabel(), ""],
-    ["Quo Markets", `${formatClock(startHour, startMinute, 1)} - ${formatClock(endHour, endMinute, 1)}`, ""],
-    ["VEO Markets", `${formatClock(startHour, startMinute, -2)} - ${formatClock(endHour, endMinute, -2)}`, ""],
+    ["Quo Markets", `${formatClock(startHour, startMinute, 1)} - ${formatClock(endHour, endMinute, 1)} (UTC+3)`, ""],
+    ["VEO Markets", `${formatClock(startHour, startMinute, -2)} - ${formatClock(endHour, endMinute, -2)} (UTC+0)`, ""],
   ];
+}
+
+function localUtcLabel() {
+  return "UTC+1 zimą / UTC+2 latem";
 }
 
 function browserTimeZoneLabel() {

@@ -60,23 +60,33 @@
               </div>
             </div>
             <label>
-              <span title="Minimalny profit wyniku testu. Wyniki poniżej tej wartości zostaną ukryte.">Profit minimum</span>
+              <span class="filter-label" title="Profit minimum. Wyniki poniżej tej wartości zostaną ukryte.">
+                Profit minimum <span class="label-help" aria-label="Profit minimum. Wyniki poniżej tej wartości zostaną ukryte.">?</span>
+              </span>
               <input id="minProfitFilter" type="number" step="50" placeholder="bez minimum" />
             </label>
             <label>
-              <span title="Maksymalny dopuszczalny drawdown kapitału w procentach. Niżej oznacza spokojniejszy wynik.">Drawdown maksimum</span>
+              <span class="filter-label" title="Drawdown maksimum. Maksymalny dopuszczalny drawdown kapitału w procentach. Niżej oznacza spokojniejszy wynik.">
+                Drawdown maksimum <span class="label-help" aria-label="Drawdown maksimum. Maksymalny dopuszczalny drawdown kapitału w procentach.">?</span>
+              </span>
               <input id="maxDdFilter" type="number" step="0.5" placeholder="bez limitu" />
             </label>
             <label>
-              <span title="Minimalny Profit Factor. To stosunek zysków brutto do strat brutto; powyżej 1 oznacza przewagę zysku nad stratą.">Profit Factor minimum</span>
+              <span class="filter-label" title="Profit Factor minimum. Profit Factor to stosunek zysków brutto do strat brutto; powyżej 1 oznacza przewagę zysku nad stratą.">
+                Profit Factor minimum <span class="label-help" aria-label="Profit Factor minimum. Profit Factor to stosunek zysków brutto do strat brutto.">?</span>
+              </span>
               <input id="minPfFilter" type="number" step="0.1" placeholder="bez minimum" />
             </label>
             <label>
-              <span title="Minimalny Recovery Factor. Pokazuje, ile profit wynosi względem drawdownu; im wyżej, tym lepiej wynik odrabia ryzyko.">Recovery Factor minimum</span>
+              <span class="filter-label" title="Recovery Factor minimum. Recovery Factor pokazuje, ile profit wynosi względem drawdownu; im wyżej, tym lepiej wynik odrabia ryzyko.">
+                Recovery Factor minimum <span class="label-help" aria-label="Recovery Factor minimum. Recovery Factor pokazuje profit względem drawdownu.">?</span>
+              </span>
               <input id="minRfFilter" type="number" step="0.1" placeholder="bez minimum" />
             </label>
             <label>
-              <span title="Minimalna liczba transakcji w wyniku testu. Pomaga odrzucić wyniki oparte na zbyt małej próbce.">Transakcje minimum</span>
+              <span class="filter-label" title="Transakcje minimum. Minimalna liczba transakcji w wyniku testu. Pomaga odrzucić wyniki oparte na zbyt małej próbce.">
+                Transakcje minimum <span class="label-help" aria-label="Transakcje minimum. Minimalna liczba transakcji w wyniku testu.">?</span>
+              </span>
               <input id="minTradesFilter" type="number" step="1" placeholder="bez minimum" />
             </label>
             <button

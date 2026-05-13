@@ -1162,7 +1162,7 @@ function buildSortToolbar(type) {
   });
   return `
     <div class="sort-toolbar">
-      <span>Sortowanie: ${escapeHtml(labels.join(" → "))}</span>
+      <span>Sortowanie łączone: ${escapeHtml(labels.join(" + "))}</span>
       <button class="button tiny secondary" type="button" data-sort-clear="${type}">Domyślne sortowanie</button>
     </div>
   `;
@@ -1378,6 +1378,11 @@ function resetSort(type) {
 
 function sortRows(rows, sort) {
   const sorters = Array.isArray(sort) ? sort : [sort];
+  if (sorters.length > 1) {
+    sortRowsByCombinedRanks(rows, sorters);
+    return;
+  }
+
   rows.sort((a, b) => {
     for (const sorter of sorters) {
       const av = getSortValue(a, sorter.key);
@@ -1392,6 +1397,36 @@ function sortRows(rows, sort) {
     }
     return 0;
   });
+}
+
+function sortRowsByCombinedRanks(rows, sorters) {
+  const scores = new Map(rows.map((row) => [row, 0]));
+
+  sorters.forEach((sorter) => {
+    const ranked = [...rows].sort((a, b) => compareRowsForSorter(a, b, sorter));
+    const denominator = Math.max(1, ranked.length - 1);
+    ranked.forEach((row, index) => {
+      scores.set(row, scores.get(row) + index / denominator);
+    });
+  });
+
+  rows.sort((a, b) => {
+    const result = scores.get(a) - scores.get(b);
+    if (result !== 0) return result;
+    return compareRowsForSorter(a, b, sorters[0]);
+  });
+}
+
+function compareRowsForSorter(a, b, sorter) {
+  const av = getSortValue(a, sorter.key);
+  const bv = getSortValue(b, sorter.key);
+  let result;
+  if (typeof av === "number" && typeof bv === "number") {
+    result = av - bv;
+  } else {
+    result = String(av).localeCompare(String(bv), "pl");
+  }
+  return sorter.direction === "asc" ? result : -result;
 }
 
 function getSortValue(row, key) {

@@ -48,6 +48,7 @@ const el = {
   detailTitle: document.querySelector("#detailTitle"),
   detailEyebrow: document.querySelector("#detailEyebrow"),
   busyIndicator: document.querySelector("#busyIndicator"),
+  helpTooltip: document.querySelector("#helpTooltip"),
   loadError: document.querySelector("#loadError"),
 };
 
@@ -174,6 +175,7 @@ function setupControls() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeResultDetail();
   });
+  setupHelpTooltip();
 }
 
 function populateStaticControls() {
@@ -297,6 +299,77 @@ function setDashboardBusy(isBusy) {
   if (el.busyIndicator) {
     el.busyIndicator.hidden = !isBusy;
   }
+}
+
+function setupHelpTooltip() {
+  if (!el.helpTooltip) return;
+
+  document.addEventListener("pointerover", (event) => {
+    const trigger = event.target.closest("[data-help-tooltip]");
+    if (!trigger) return;
+    showHelpTooltip(trigger);
+  });
+
+  document.addEventListener("pointerout", (event) => {
+    const trigger = event.target.closest("[data-help-tooltip]");
+    if (!trigger || trigger.contains(event.relatedTarget)) return;
+    hideHelpTooltip();
+  });
+
+  document.addEventListener("focusin", (event) => {
+    const trigger = event.target.closest("[data-help-tooltip]");
+    if (!trigger) return;
+    showHelpTooltip(trigger);
+  });
+
+  document.addEventListener("focusout", (event) => {
+    if (!event.target.closest("[data-help-tooltip]")) return;
+    hideHelpTooltip();
+  });
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-help-tooltip]");
+    if (!trigger) {
+      hideHelpTooltip();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    showHelpTooltip(trigger);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hideHelpTooltip();
+  });
+}
+
+function showHelpTooltip(trigger) {
+  const tooltip = trigger.dataset.helpTooltip;
+  if (!tooltip || !el.helpTooltip) return;
+  el.helpTooltip.textContent = tooltip;
+  el.helpTooltip.hidden = false;
+  positionHelpTooltip(trigger);
+}
+
+function positionHelpTooltip(trigger) {
+  const rect = trigger.getBoundingClientRect();
+  const tooltipRect = el.helpTooltip.getBoundingClientRect();
+  const margin = 10;
+  const left = Math.min(
+    Math.max(margin, rect.left + rect.width / 2 - tooltipRect.width / 2),
+    window.innerWidth - tooltipRect.width - margin,
+  );
+  let top = rect.bottom + 8;
+  if (top + tooltipRect.height + margin > window.innerHeight) {
+    top = Math.max(margin, rect.top - tooltipRect.height - 8);
+  }
+  el.helpTooltip.style.left = `${left}px`;
+  el.helpTooltip.style.top = `${top}px`;
+}
+
+function hideHelpTooltip() {
+  if (!el.helpTooltip) return;
+  el.helpTooltip.hidden = true;
 }
 
 function uniqueParameterValues(name) {
@@ -1236,15 +1309,11 @@ function sortableHeader(label, key, type) {
   const tooltip = headerTooltip(key, label);
   const sortHint = "Użyj sortowania od najmniejszej albo od największej wartości. Kolejne kolumny dodają następny warunek sortowania.";
   return `
-    <th class="${columnClass(key)} ${sortItem ? "sorted-column" : ""}" title="${escapeHtml(tooltip)}">
+    <th class="${columnClass(key)} ${sortItem ? "sorted-column" : ""}">
       <div class="th-content">
         <span class="th-label-wrap">
           ${headerLabelHtml(label)}
-          <span
-            class="header-help"
-            title="${escapeHtml(tooltip)}"
-            aria-label="${escapeHtml(tooltip)}"
-          >?</span>
+          ${helpIconHtml(tooltip, "header-help")}
         </span>
         <span class="sort-controls" aria-label="${escapeHtml(`${tooltip}. ${sortHint}`)}">
           <button
@@ -1266,6 +1335,17 @@ function sortableHeader(label, key, type) {
         </span>
       </div>
     </th>
+  `;
+}
+
+function helpIconHtml(tooltip, className) {
+  return `
+    <span
+      class="${className}"
+      data-help-tooltip="${escapeHtml(tooltip)}"
+      tabindex="0"
+      aria-label="${escapeHtml(tooltip)}"
+    >?</span>
   `;
 }
 
@@ -1732,14 +1812,10 @@ function renderSetDetail(setItem) {
 function plainHeader(label, key) {
   const tooltip = headerTooltip(key, label);
   return `
-    <th title="${escapeHtml(tooltip)}">
+    <th>
       <span class="th-label-wrap">
         ${headerLabelHtml(label)}
-        <span
-          class="header-help"
-          title="${escapeHtml(tooltip)}"
-          aria-label="${escapeHtml(tooltip)}"
-        >?</span>
+        ${helpIconHtml(tooltip, "header-help")}
       </span>
     </th>
   `;

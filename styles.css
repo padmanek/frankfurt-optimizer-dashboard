@@ -74,6 +74,29 @@ body.dashboard-busy {
   animation: dashboard-spin 0.8s linear infinite;
 }
 
+.help-tooltip {
+  position: fixed;
+  z-index: 120;
+  max-width: min(340px, calc(100vw - 24px));
+  border: 1px solid rgba(31, 122, 104, 0.26);
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.35;
+  pointer-events: none;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+}
+
+.help-tooltip[hidden] {
+  display: none;
+}
+
 @keyframes dashboard-spin {
   to {
     transform: rotate(360deg);

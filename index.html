@@ -60,32 +60,32 @@
               </div>
             </div>
             <label>
-              <span class="filter-label" title="Profit minimum. Wyniki poniżej tej wartości zostaną ukryte.">
-                Profit minimum <span class="label-help" aria-label="Profit minimum. Wyniki poniżej tej wartości zostaną ukryte.">?</span>
+              <span class="filter-label">
+                Profit minimum <span class="label-help" data-help-tooltip="Profit minimum. Wyniki poniżej tej wartości zostaną ukryte." tabindex="0" aria-label="Profit minimum. Wyniki poniżej tej wartości zostaną ukryte.">?</span>
               </span>
               <input id="minProfitFilter" type="number" step="50" placeholder="bez minimum" />
             </label>
             <label>
-              <span class="filter-label" title="Drawdown maksimum. Maksymalny dopuszczalny drawdown kapitału w procentach. Niżej oznacza spokojniejszy wynik.">
-                Drawdown maksimum <span class="label-help" aria-label="Drawdown maksimum. Maksymalny dopuszczalny drawdown kapitału w procentach.">?</span>
+              <span class="filter-label">
+                Drawdown maksimum <span class="label-help" data-help-tooltip="Drawdown maksimum. Maksymalny dopuszczalny drawdown kapitału w procentach. Niżej oznacza spokojniejszy wynik." tabindex="0" aria-label="Drawdown maksimum. Maksymalny dopuszczalny drawdown kapitału w procentach.">?</span>
               </span>
               <input id="maxDdFilter" type="number" step="0.5" placeholder="bez limitu" />
             </label>
             <label>
-              <span class="filter-label" title="Profit Factor minimum. Profit Factor to stosunek zysków brutto do strat brutto; powyżej 1 oznacza przewagę zysku nad stratą.">
-                Profit Factor minimum <span class="label-help" aria-label="Profit Factor minimum. Profit Factor to stosunek zysków brutto do strat brutto.">?</span>
+              <span class="filter-label">
+                Profit Factor minimum <span class="label-help" data-help-tooltip="Profit Factor minimum. Profit Factor to stosunek zysków brutto do strat brutto; powyżej 1 oznacza przewagę zysku nad stratą." tabindex="0" aria-label="Profit Factor minimum. Profit Factor to stosunek zysków brutto do strat brutto.">?</span>
               </span>
               <input id="minPfFilter" type="number" step="0.1" placeholder="bez minimum" />
             </label>
             <label>
-              <span class="filter-label" title="Recovery Factor minimum. Recovery Factor pokazuje, ile profit wynosi względem drawdownu; im wyżej, tym lepiej wynik odrabia ryzyko.">
-                Recovery Factor minimum <span class="label-help" aria-label="Recovery Factor minimum. Recovery Factor pokazuje profit względem drawdownu.">?</span>
+              <span class="filter-label">
+                Recovery Factor minimum <span class="label-help" data-help-tooltip="Recovery Factor minimum. Recovery Factor pokazuje, ile profit wynosi względem drawdownu; im wyżej, tym lepiej wynik odrabia ryzyko." tabindex="0" aria-label="Recovery Factor minimum. Recovery Factor pokazuje profit względem drawdownu.">?</span>
               </span>
               <input id="minRfFilter" type="number" step="0.1" placeholder="bez minimum" />
             </label>
             <label>
-              <span class="filter-label" title="Transakcje minimum. Minimalna liczba transakcji w wyniku testu. Pomaga odrzucić wyniki oparte na zbyt małej próbce.">
-                Transakcje minimum <span class="label-help" aria-label="Transakcje minimum. Minimalna liczba transakcji w wyniku testu.">?</span>
+              <span class="filter-label">
+                Transakcje minimum <span class="label-help" data-help-tooltip="Transakcje minimum. Minimalna liczba transakcji w wyniku testu. Pomaga odrzucić wyniki oparte na zbyt małej próbce." tabindex="0" aria-label="Transakcje minimum. Minimalna liczba transakcji w wyniku testu.">?</span>
               </span>
               <input id="minTradesFilter" type="number" step="1" placeholder="bez minimum" />
             </label>
@@ -200,6 +200,7 @@
       <span class="busy-spinner" aria-hidden="true"></span>
       <span>Przeliczam wyniki...</span>
     </div>
+    <div id="helpTooltip" class="help-tooltip" hidden role="tooltip"></div>
 
     <div id="resultModal" class="modal" hidden>
       <div class="modal-backdrop" data-close-detail></div>
@@ -215,6 +216,6 @@
       </section>
     </div>
 
-    <script src="app.js?v=20260514-1"></script>
+    <script src="app.js?v=20260514-2"></script>
   </body>
 </html>
